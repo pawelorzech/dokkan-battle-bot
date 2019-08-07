@@ -1,5 +1,9 @@
-# Open Source Battle Bot
-I've released the code to hopefully give everyone an opportunity to more easily complete dokkan events.
+# Dragon Ball Dokkan Battle Bot
+
+This is a Dokkan Battle bot that was first created by FlashChaser. I added a lot of new features and planning on adding more, therefore I've created my own repo. 
+There's no support from me - it is what it is. If you're gonna get banned - bad luck. 
+
+
 If you want to add a feature you've made feel free to submit a pull request.
 
 The bot is made quite straightforwardly:
@@ -11,10 +15,22 @@ The commands module is where the bulk of the code will be written for adding new
 The dokkan module is where the command line/UI will be implemented, and will call the functions in the commands module.
 
 The decryptor module uses: https://github.com/bssthu/pysqlsimplecipher
-Although it's slow I preferred this code over pysqlcipher simply because it's easier to package it for distribution without running into issues.
+Although it's slow FlashChaser preferred this code over pysqlcipher simply because it's easier to package it for distribution without running into issues.
 
 # Download
-https://github.com/FlashChaser/Open-Source-Battle-Bot/releases
+Just grab a copy of master repo and go on.
+
+# To Do
+
+Feel free to add feature requests. I'm gonna try and add as much as I can with my spare time. Bot already can do pretty much anything. 
+
+- Sell only Hercules
+- Hercule Punch
+- SBR,
+- RankUp,
+- Transfer,
+- BossRush
+- *EzaPLUS (up to 50lvl)* - done
 
 # Installation
 
@@ -49,11 +65,3 @@ except:
     config.Model.set_connection_resolver(config.db_jp)
     config.Quests.find_or_fail(int(stage_id))
 ```
-
-
-# To Do
-- SBR,
-- RankUp,
-- Transfer,
-- BossRush
-- *EzaPLUS (up to 50lvl)* - done
