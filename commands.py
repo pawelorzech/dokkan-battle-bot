@@ -2603,6 +2603,7 @@ def user_command_executor(command):
         complete_unfinished_events()
         complete_unfinished_zbattles()
         complete_clash()
+        punch_machine()
         refresh_client()
         get_user_info()
     elif command == 'completequests':
@@ -2638,6 +2639,8 @@ def user_command_executor(command):
         items_viewer()
     elif command == 'medals':
         sell_medals()
+    elif command == 'punchmachine':
+        punch_machine()
     elif command == 'sell':
         sell_cards__bulk_GUI()
     elif command == 'cards':
@@ -2673,7 +2676,24 @@ def user_command_executor(command):
         refresh_client()
     else:
         print('Command not found.')
+####################################################################
 
+def punch_machine():
+    print("This will do all of Hercule Punch levels.")
+    print("Wait for it...")
+#Zeni Stage 711001 Difficulties: [1] AreaID: 711
+#Potential Orb Stage 711002 Difficulties: [1] AreaID: 711
+#Dragon Stone Stage 711003 Difficulties: [1] AreaID: 711
+#Zeni Stage 711004 Difficulties: [1] AreaID: 711
+#Potential Orb Stage 711005 Difficulties: [1] AreaID: 711
+#Dragon Stone Stage 711006 Difficulties: [1] AreaID: 711
+    complete_stage('711001', 1)
+    complete_stage('711002', 1)
+    complete_stage('711003', 1)
+    complete_stage('711004', 1)
+    complete_stage('711005', 1)
+    complete_stage('711006', 1)
+    print("It is done.")
 ####################################################################
 def medal_calculator():
     # ## Pre Lr Accounts
