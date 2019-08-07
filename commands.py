@@ -1963,6 +1963,66 @@ def increase_capacity():
         print(Fore.GREEN + Style.BRIGHT + 'Card capacity +5')
 ####################################################################
 
+def lr_pan():
+    #LR Pan event
+    # Even More Secret Adventures 177001 Difficulties: [1] AreaID: 177
+    print('Going to slay Pan event (LR)')
+    complete_stage('177001',1)
+    accept_gifts()
+    accept_missions()
+
+####################################################################
+def bossrush():
+    print('Attempting to do Boss Rush...')
+    complete_stage('701001',3)
+    complete_stage('701001',4)
+    complete_stage('701002',4)
+    complete_stage('701002',5)
+    complete_stage('701003',5)
+    complete_stage('701004',5)
+    complete_stage('701005',5)
+    complete_stage('701006',5)
+    complete_stage('701007',5)
+    print('Boss Rush - it is done.')
+#Dokkan Event Boss Rush 1 701001 Difficulties: [3, 4] AreaID: 701
+#Dokkan Event Boss Rush 2 701002 Difficulties: [4, 5] AreaID: 701
+#Dokkan Event Boss Rush 3 701003 Difficulties: [5] AreaID: 701
+#Dokkan Event Boss Rush 4 701004 Difficulties: [5] AreaID: 701
+#Dokkan Event Boss Rush 5 701005 Difficulties: [5] AreaID: 701
+#Dokkan Event Boss Rush 6 701006 Difficulties: [5] AreaID: 701
+#Dokkan Event Boss Rush 7 701007 Difficulties: [5] AreaID: 701
+
+
+
+####################################################################
+
+def rank_up():
+
+    # ## Returns User Info, we will use rank later on
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/user'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/user'
+    else:
+        url = 'http://ishin-production.aktsk.jp/user'
+    r = requests.get(url, headers=headers)
+    user = r.json()
+
+    print('Your current rank is: ' + str(user['user']['rank']))
+    print('What rank would you like to achieve?')
+
+####################################################################
+
+
 def get_user_info():
 
     # ## Returns User dictionary and info
@@ -2586,10 +2646,16 @@ def user_command_executor(command):
         accept_missions()
     elif command == 'potara':
         potara()
-    elif command =='medalcal': ##Source: https://github.com/mvxindra/Open-Source-Battle-Bot
+    elif command == 'medalcal': ##Source: https://github.com/mvxindra/Open-Source-Battle-Bot
         medal_calculator()
     elif command == 'ezaplus':
         complete_unfinished_zbattles_plus()
+    elif command == 'rankup':
+        rank_up()
+    elif command == 'lrpan':
+        lr_pan()
+    elif command == 'bossrush':
+        bossrush()
     elif command == 'omegafarm':
         print('This will do all daily, potential, unfinished stages, events, zbattles and clash...')
         complete_stage('130001', 0)

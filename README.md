@@ -25,11 +25,11 @@ Just grab a copy of master repo and go on.
 Feel free to add feature requests. I'm gonna try and add as much as I can with my spare time. Bot already can do pretty much anything. 
 
 - Sell only Hercules
-- Hercule Punch
+- *Hercule Punch*
 - SBR,
 - RankUp,
-- Transfer,
-- BossRush
+- Transfer but better,
+- *BossRush*
 - *EzaPLUS (up to 50lvl)* - done
 
 # Installation

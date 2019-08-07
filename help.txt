@@ -17,13 +17,16 @@ To stop a command from executing, hold ctrl + c
 'summon' -> Provides a GUI to choose what banner to summon.
 'listsummons' -> Prints a list of all currently available summons.
 'dragonballs' -> Collects Dragonballs and makes wishes.
-'omegafarm' -> Completes everything (story, events, zbattle, daily, accepts gifts and missions)
+'omegafarm' -> Completes everything it can do
 'info' -> Print out account information.
 'medalcal' -> Does free LR's
+'bossrush' -> Does Boss Rush
+'rankup' -> Farms to get your rank up
+'lrpan' -> Farms LR Pan level
 'punchmachine' -> Does Punch Machine
 'items' -> Provides a GUI to view user items.
 'medals' -> Provides a GUI to view and sell medals.
-'potara' -> One command to do all potara events (it's not automated, you have to do stuff manualy as well!)
+'potara' -> One command to do all potara events
 'sell' -> Provides a GUI to sell cards.
 'team' -> Change composition of a deck.
 'supporter' -> Change your support Unit.
