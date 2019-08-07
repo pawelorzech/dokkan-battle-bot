@@ -21,7 +21,6 @@ To stop a command from executing, hold ctrl + c
 'info' -> Print out account information.
 'medalcal' -> Does free LR's
 'bossrush' -> Does Boss Rush
-'rankup' -> Farms to get your rank up
 'lrpan' -> Farms LR Pan level
 'punchmachine' -> Does Punch Machine
 'items' -> Provides a GUI to view user items.

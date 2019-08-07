@@ -2015,10 +2015,17 @@ def rank_up():
     else:
         url = 'http://ishin-production.aktsk.jp/user'
     r = requests.get(url, headers=headers)
-    user = r.json()
+    current_rank = r.json()['user']['rank']
+    
+    print('Your current rank is: ' +str(current_rank))
+    goal_rank = int(input('What rank would you like to achieve? \n'))
+    print('Ok, farming till rank: ' +(goal_rank))
+    
+    levels_to_farm = (goal_rank) - (current_rank)
+    print('Levels to farm: ' +str(levels_to_farm))
 
-    print('Your current rank is: ' + str(user['user']['rank']))
-    print('What rank would you like to achieve?')
+  
+
 
 ####################################################################
 
@@ -2650,8 +2657,8 @@ def user_command_executor(command):
         medal_calculator()
     elif command == 'ezaplus':
         complete_unfinished_zbattles_plus()
-    elif command == 'rankup':
-        rank_up()
+   # elif command == 'rankup':
+   #     rank_up()
     elif command == 'lrpan':
         lr_pan()
     elif command == 'bossrush':
