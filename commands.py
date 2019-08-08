@@ -2018,23 +2018,29 @@ def rank_up():
     current_rank = int(r.json()['user']['rank'])
     
     print('Your current rank is: ' +str(current_rank))
-    goal_rank = (input('What rank would you like to achieve? \n'))
-    print('Ok, farming till rank: ' +(goal_rank))
+    goal_rank = int(input('What rank would you like to achieve? \n'))
+    print('Ok, farming till rank: ' +str(goal_rank))
     
    # just for bugtracking 
    # with open('personal.json', 'w') as json_file:
    #     json.dump(r.json(), json_file)
 
-    levels_to_farm = int(goal_rank) - int(r.json()['user']['rank'])
-    print('Levels to farm: ' +str(levels_to_farm))
+    levels_to_farm = goal_rank - current_rank
+    print(Fore.REDr + Style.BRIGHT + 'Levels to farm: ' +str(levels_to_farm))
 
-    while current_rank < goal_rank:
+    while int(current_rank) < int(goal_rank):
         #If your current rank is lower than goal rank we gonna farm.
-        
-        
-        if int(goal_rank) == int(current_rank):
-            #If your current rank and goal rank are the same we are going to stop farming.
-            print('It is done. Your rank is: ' +str(goal_rank))
+        print('Farming...')
+        complete_stage('27003', 4)
+        #test:
+        #complete_stage('1001', 2)
+        r = requests.get(url, headers=headers)
+        current_rank = int(r.json()['user']['rank'])
+        print('Your current rank is: ' +str(current_rank))
+        levels_to_farm = goal_rank - current_rank
+        print('Still to go: ' +str(levels_to_farm))
+    if goal_rank == current_rank:
+        print(Fore.GREEN + Style.BRIGHT + 'Done!')
             
         
 ####################################################################
