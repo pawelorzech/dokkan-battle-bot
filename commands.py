@@ -2025,12 +2025,18 @@ def rank_up():
    # with open('personal.json', 'w') as json_file:
    #     json.dump(r.json(), json_file)
 
-
     levels_to_farm = int(goal_rank) - int(r.json()['user']['rank'])
     print('Levels to farm: ' +str(levels_to_farm))
 
-    
-
+    while current_rank < goal_rank:
+        #If your current rank is lower than goal rank we gonna farm.
+        
+        
+        if int(goal_rank) == int(current_rank):
+            #If your current rank and goal rank are the same we are going to stop farming.
+            print('It is done. Your rank is: ' +str(goal_rank))
+            
+        
 ####################################################################
 
 
