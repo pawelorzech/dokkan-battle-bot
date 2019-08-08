@@ -2026,7 +2026,7 @@ def rank_up():
    #     json.dump(r.json(), json_file)
 
     levels_to_farm = goal_rank - current_rank
-    print(Fore.REDr + Style.BRIGHT + 'Levels to farm: ' +str(levels_to_farm))
+    print(Fore.RED + Style.BRIGHT + 'Levels to farm: ' +str(levels_to_farm))
 
     while int(current_rank) < int(goal_rank):
         #If your current rank is lower than goal rank we gonna farm.

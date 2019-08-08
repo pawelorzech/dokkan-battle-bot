@@ -20,6 +20,7 @@ To stop a command from executing, hold ctrl + c
 'omegafarm' -> Completes everything it can do
 'info' -> Print out account information.
 'medalcal' -> Does free LR's
+'rankup' -> Farms your rank
 'bossrush' -> Does Boss Rush
 'lrpan' -> Farms LR Pan level
 'punchmachine' -> Does Punch Machine
