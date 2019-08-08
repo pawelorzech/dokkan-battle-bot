@@ -27,7 +27,7 @@ Feel free to add feature requests. I'm gonna try and add as much as I can with m
 - Sell only Hercules
 - **Hercule Punch  - done**
 - SBR,
-- RankUp,
+- **RankUp - done**,
 - Transfer but better,
 - **BossRush - done**
 - **EzaPLUS (up to 50lvl) - done**
