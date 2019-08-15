@@ -1983,6 +1983,8 @@ def bossrush():
     complete_stage('701005',5)
     complete_stage('701006',5)
     complete_stage('701007',5)
+    complete_stage('701008',5)
+    accept_missions()
     print('Boss Rush - it is done.')
 #Dokkan Event Boss Rush 1 701001 Difficulties: [3, 4] AreaID: 701
 #Dokkan Event Boss Rush 2 701002 Difficulties: [4, 5] AreaID: 701
