@@ -2677,8 +2677,8 @@ def user_command_executor(command):
         rank_up()
     elif command == 'lrpan':
         lr_pan()
-    elif command == 'sbr':
-        superbattleroad()
+ #   elif command == 'sbr':
+ #       superbattleroad()
     elif command == 'bossrush':
         bossrush()
     elif command == 'omegafarm':
@@ -2768,6 +2768,7 @@ def user_command_executor(command):
     else:
         print('Command not found.')
 ####################################################################
+#Oh, it's work in progress!
 
 
 def superbattleroad():
