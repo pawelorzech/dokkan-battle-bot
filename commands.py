@@ -2033,9 +2033,9 @@ def rank_up():
     while int(current_rank) < int(goal_rank):
         #If your current rank is lower than goal rank we gonna farm.
         print('Farming...')
-        complete_stage('27003', 4)
+        complete_stage('27003', 2)
         #test:
-        #complete_stage('1001', 2)
+        #complete_stage('1001', 1)
         r = requests.get(url, headers=headers)
         current_rank = int(r.json()['user']['rank'])
         print('Your current rank is: ' +str(current_rank))
