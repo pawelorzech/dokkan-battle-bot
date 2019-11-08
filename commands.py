@@ -1468,7 +1468,7 @@ def change_supporter():
             cards_to_display_dicts.append(char)
             cards_to_display.append(
                 char['Type'] + char['Rarity'] + ' ' + char['Name'] + ' | ' + str(char['ID']) + ' | ' + str(
-                    char['UniqueID']) + ' | ' ' x '+str(x['quantity']))
+                    char['UniqueID']) + ' | ' ' x '+str(['quantity']))
 
     ###Define links to display
     links_master = []
