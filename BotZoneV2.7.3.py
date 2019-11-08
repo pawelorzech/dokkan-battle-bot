@@ -88,9 +88,9 @@ while True:
                     print('')
                     commands.db_download()
                 elif command == '6':
-                	commamds.glb_db_dowmload()
-                elif command == '7':
-                	commands.jp_db_download()
+                	commands.glb_db_download()
+                #elif command == '7':
+                #	commands.jp_db_download()
                 elif command == '5':
                     webbrowser.open(commands.discordurl, new=0, autoraise=True)
                 elif command == 'exit':
@@ -186,8 +186,8 @@ while True:
                     commands.db_download()
                 elif command == '7':
                 	commands.glb_db_download()
-                elif command == '8':
-                	commands.jp_db_download()
+               # elif command == '8':
+                #	commands.jp_db_download()
                 elif command == '6':
                     webbrowser.open(commands.discordurl, new=0, autoraise=True)
                 elif command == 'exit':

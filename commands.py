@@ -1067,7 +1067,8 @@ def glb_db_download():
     
 def db_download():
     #
-    jp_out_of_date = False
+    #jp_out_of_date = False 
+    #JP is broken
     glb_out_of_date = False
 
     # Check local DB versions in help.txt
