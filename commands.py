@@ -2156,6 +2156,52 @@ def increase_capacity():
         print(Fore.GREEN + Style.BRIGHT + 'Card capacity +5')
 
 
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/user'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/user'
+    else:
+        url = 'http://ishin-production.aktsk.jp/user'
+    r = requests.get(url, headers=headers)
+    current_rank = int(r.json()['user']['rank'])
+    
+    print('Your current rank is: ' +str(current_rank))
+    goal_rank = int(input('What rank would you like to achieve? \n'))
+    print('Ok, farming till rank: ' +str(goal_rank))
+    
+   # just for bugtracking 
+   # with open('personal.json', 'w') as json_file:
+   #     json.dump(r.json(), json_file)
+
+    levels_to_farm = goal_rank - current_rank
+    print(Fore.RED + Style.BRIGHT + 'Levels to farm: ' +str(levels_to_farm))
+
+    while int(current_rank) < int(goal_rank):
+        #If your current rank is lower than goal rank we gonna farm.
+        print('Farming...')
+        complete_stage('27003', 2)
+        #test:
+        #complete_stage('1001', 1)
+        r = requests.get(url, headers=headers)
+        current_rank = int(r.json()['user']['rank'])
+        print('Your current rank is: ' +str(current_rank))
+        levels_to_farm = goal_rank - current_rank
+        print('Still to go: ' +str(levels_to_farm))
+    if goal_rank == current_rank:
+        print(Fore.GREEN + Style.BRIGHT + 'Done!')
+            
+        
+=======
+
 ####################################################################
 
 def get_user_info():
