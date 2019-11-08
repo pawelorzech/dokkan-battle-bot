@@ -1,67 +1,38 @@
-# Dragon Ball Dokkan Battle Bot
+# pysqlsimplecipher
+Encrypt or decrypt formated sqlite db.
 
-This is a Dokkan Battle bot that was first created by FlashChaser. I added a lot of new features and planning on adding more, therefore I've created my own repo. 
-There's no support from me - it is what it is. If you're gonna get banned - bad luck. 
+This project is a tool for sqlite database encryption or decryption like
+[sqlcipher](http://sqlcipher.net/)
+without install sqlcipher.
 
+When encrypt or decrypt database, an algorithm called AES-256-CBC is used.
+Each page shares the same key derived from password,
+but owns a random initialization vector stored at the end of the page.
 
-If you want to add a feature you've made feel free to submit a pull request.
-
-The bot is made quite straightforwardly:
-The packet module handles the encryption of packet data as well as the authorisation.
-There shouldn't be too much reason to add to this file beyond fixing bugs.
-  
-The commands module is where the bulk of the code will be written for adding new features.
-
-The dokkan module is where the command line/UI will be implemented, and will call the functions in the commands module.
-
-The decryptor module uses: https://github.com/bssthu/pysqlsimplecipher
-Although it's slow FlashChaser preferred this code over pysqlcipher simply because it's easier to package it for distribution without running into issues.
-
-# Download
-Just grab a copy of master repo and go on.
-
-# To Do
-
-Feel free to add feature requests. I'm gonna try and add as much as I can with my spare time. Bot already can do pretty much anything. 
-
-- Sell only Hercules
-- **Hercule Punch  - done**
-- SBR,
-- **RankUp - done**,
-- Transfer but better,
-- **BossRush - done**
-- **EzaPLUS (up to 50lvl) - done**
-
-# Installation
-
-You might need to use sudo before every pip3 command.
-
-```
-pip3 install six
-pip3 install pyinstaller
-pip3 install colorama
-pip3 install orator
-	pip3 install pycrypto - https://github.com/dlitz/pycrypto
-OR	pip3 install pycryptodome
-pip3 install PySimpleGUI
-pip3 install requests
+## Decrypt
+```bash
+python decrypt.py encrypted.db password output.db
 ```
 
-Then go to folder where your dokkan.py file is and: python3 dokkan.py
-
-Happy testing!
-
-# Pull Requests
-Very happy to merge pull requests.
-Until I can develop some tests be careful to make sure that all new commands that you implement accurately support JP translation.
-
-e.g Check that you read from the global database, and if the data doesn't exist, read from the jp database.
-
-```python
-try:
-    config.Model.set_connection_resolver(config.db_glb)
-    config.Quests.find_or_fail(int(stage_id))
-except:
-    config.Model.set_connection_resolver(config.db_jp)
-    config.Quests.find_or_fail(int(stage_id))
+## Encrypt
+```bash
+python encrypt.py plain.db password output.db
 ```
+Needs reserved space at the end of each page of the database file.
+
+Otherwise, use sqlcipher to encrypt.
+
+#### Encrypt with sqlcipher
+- Open plain db
+```bash
+./sqlcipher plain.db
+```
+- Encrypt to enc.db
+```sql
+ATTACH DATABASE 'enc.db' as encrypted key 'testkey';
+SELECT sqlcipher_export('encrypted');
+DETACH DATABASE encrypted;
+```
+
+## License
+GNU Lesser General Public License Version 3
