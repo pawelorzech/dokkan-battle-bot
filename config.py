@@ -116,3 +116,6 @@ class Area(Model):
 class Medal(Model):
 
     __table__ = 'awakening_items'
+
+
+

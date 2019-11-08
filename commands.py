@@ -16,30 +16,53 @@ from string import ascii_uppercase
 import sys
 import time
 import webbrowser
-
+from random import *
+import extra
+import Lrfarm
+import aa
 # Coloroma autoreset
 init(autoreset=True)
 
-def complete_stage(stage_id, difficulty, kagi = None):
+
+def complete_stage(stage_id, difficulty, kagi=None):
     # Completes a given stage stage name or ID has been supplied as a string
     # kagi must be correct kagi item ID if used
     # Check if user has supplied a stage name and searches DB for correct stage id
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/user'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/user'
+    else:
+        url = 'http://ishin-production.aktsk.jp/user'
+    r = requests.get(url, headers=headers)
+    user = r.json()
+
+    print(Fore.GREEN + 'Account Rank:' + str(get_user()['user']['rank']))
+    print('Stones: ' + str(user['user']['stone']))
     if not stage_id.isnumeric():
 
         try:
             config.Model.set_connection_resolver(config.db_glb)
             stage_id = str(config.Quests.where('name', 'like', '%' + stage_id
-                                        + '%').first().id)
+                                               + '%').first().id)
         except AttributeError:
             config.Model.set_connection_resolver(config.db_jp)
             stage_id = str(config.Quests.where('name', 'like', '%' + stage_id
-                                        + '%').first().id)
+                                               + '%').first().id)
         except:
-            print(Fore.RED + Style.BRIGHT+"Could not find stage name in databases")
+            print(Fore.RED + Style.BRIGHT + "Could not find stage name in databases")
             return 0
     # Retrieve correct stage name to print
     # Check if GLB database has id, if not try JP DB.
-    
+
     try:
         config.Model.set_connection_resolver(config.db_glb)
         config.Quests.find_or_fail(int(stage_id))
@@ -51,12 +74,10 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
     try:
         print('Begin stage: ' + stage_name + ' ' + stage_id + ' | Difficulty: ' \
-                + str(difficulty) + ' Deck: ' + str(config.deck))
+              + str(difficulty) + ' Deck: ' + str(config.deck))
     except:
         print(Fore.RED + Style.BRIGHT + 'Does this quest exist?')
         return 0
-        
-
 
     # Begin timer for overall stage completion, rounded to second.
     timer_start = int(round(time.time(), 0))
@@ -67,22 +88,25 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
     if friend['is_cpu'] == False:
         if kagi != None:
-            sign = json.dumps({'difficulty' : difficulty, 'eventkagi_item_id': kagi,'friend_id' : friend['id'], 'is_playing_script' : True, 'selected_team_num': config.deck})
+            sign = json.dumps({'difficulty': difficulty, 'eventkagi_item_id': kagi, 'friend_id': friend['id'],
+                               'is_playing_script': True, 'selected_team_num': config.deck})
         else:
-            sign = json.dumps({'difficulty' : difficulty, 'friend_id' : friend['id'], 'is_playing_script' : True, 'selected_team_num': config.deck})
+            sign = json.dumps({'difficulty': difficulty, 'friend_id': friend['id'], 'is_playing_script': True,
+                               'selected_team_num': config.deck})
     else:
         if kagi != None:
-            sign = json.dumps({'difficulty' : difficulty, 'eventkagi_item_id': kagi,'cpu_friend_id' : friend['id'], 'is_playing_script' : True, 'selected_team_num': config.deck})
+            sign = json.dumps({'difficulty': difficulty, 'eventkagi_item_id': kagi, 'cpu_friend_id': friend['id'],
+                               'is_playing_script': True, 'selected_team_num': config.deck})
         else:
-            sign = json.dumps({'difficulty' : difficulty, 'cpu_friend_id' : friend['id'], 'is_playing_script' : True, 'selected_team_num': config.deck})
-
+            sign = json.dumps({'difficulty': difficulty, 'cpu_friend_id': friend['id'], 'is_playing_script': True,
+                               'selected_team_num': config.deck})
 
     enc_sign = packet.encrypt_sign(sign)
 
     # ## Send First Request
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/quests/' + stage_id
                                     + '/sugoroku_maps/start'),
@@ -91,7 +115,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     data = {'sign': enc_sign}
 
     if config.client == 'global':
@@ -105,7 +129,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
     # Form second request
     # Time for request sent
-    
+
     if 'sign' in r.json():
         dec_sign = packet.decrypt_sign(r.json()['sign'])
     elif 'error' in r.json():
@@ -116,7 +140,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
             if config.allow_stamina_refill == True:
                 refill_stamina()
                 r = requests.post(url, data=json.dumps(data),
-                              headers=headers)
+                                  headers=headers)
             else:
                 print(Fore.RED + Style.BRIGHT + 'Stamina refill not allowed.')
                 return 0
@@ -133,24 +157,24 @@ def complete_stage(stage_id, difficulty, kagi = None):
         return 0
     if 'sign' in r.json():
         dec_sign = packet.decrypt_sign(r.json()['sign'])
-    #Retrieve possible tile steps from response
+    # Retrieve possible tile steps from response
     steps = []
     for x in dec_sign['sugoroku']['events']:
         steps.append(x)
 
-    finish_time = int(round(time.time(), 0)+2000)
+    finish_time = int(round(time.time(), 0) + 90)
     start_time = finish_time - randint(6200000, 8200000)
     damage = randint(500000, 1000000)
 
     # Hercule punching bag event damage
-    if str(stage_id)[0:3] == '711':
+    if str(stage_id)[0:3] in ('711', '185'):
         damage = randint(100000000, 101000000)
 
     sign = {
         'actual_steps': steps,
         'difficulty': difficulty,
         'elapsed_time': finish_time - start_time,
-        'energy_ball_counts_in_boss_battle': [4,6,0,6,4,3,0,0,0,0,0,0,0, ],
+        'energy_ball_counts_in_boss_battle': [4, 6, 0, 6, 4, 3, 0, 0, 0, 0, 0, 0, 0, ],
         'has_player_been_taken_damage': False,
         'is_cheat_user': False,
         'is_cleared': True,
@@ -162,30 +186,30 @@ def complete_stage(stage_id, difficulty, kagi = None):
         'quest_started_at_ms': start_time,
         'steps': steps,
         'token': dec_sign['token'],
-        }
+    }
 
     enc_sign = packet.encrypt_sign(json.dumps(sign))
 
     # Send second request
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/quests/' + stage_id
-                                + '/sugoroku_maps/finish'),
+                                    + '/sugoroku_maps/finish'),
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     data = {'sign': enc_sign}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/quests/' + stage_id \
               + '/sugoroku_maps/finish'
     else:
         url = 'http://ishin-production.aktsk.jp/quests/' + stage_id \
-            + '/sugoroku_maps/finish'
+              + '/sugoroku_maps/finish'
 
     r = requests.post(url, data=json.dumps(data), headers=headers)
     dec_sign = packet.decrypt_sign(r.json()['sign'])
@@ -257,7 +281,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
                 carditemsset.add(x['item_id'])
             elif x['item_type'] == 'Point::Stone':
 
-#                print('' + card.name + '['+rarity+']'+ ' x '+str(x['quantity']))
+                #                print('' + card.name + '['+rarity+']'+ ' x '+str(x['quantity']))
                 # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
 
                 stones += 1
@@ -282,7 +306,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(Fore.CYAN + Style.BRIGHT + config.SupportItems.find(x).name + ' x' \
-                + str(supportitems.count(x)))
+                  + str(supportitems.count(x)))
         for x in awakeningitemsset:
             # JP Translation
             try:
@@ -293,7 +317,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(Fore.MAGENTA + Style.BRIGHT + config.AwakeningItems.find(x).name + ' x' \
-                + str(awakeningitems.count(x)))
+                  + str(awakeningitems.count(x)))
         for x in trainingitemsset:
             # JP Translation
             try:
@@ -304,7 +328,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
-                + str(trainingitems.count(x)))
+                  + str(trainingitems.count(x)))
         for x in potentialitemsset:
             # JP Translation
             try:
@@ -315,7 +339,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(config.PotentialItems.find_or_fail(x).name + ' x' \
-                + str(potentialitems.count(x)))
+                  + str(potentialitems.count(x)))
         for x in treasureitemsset:
             # JP Translation
             try:
@@ -326,7 +350,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
-                + str(treasureitems.count(x)))
+                  + str(treasureitems.count(x)))
         for x in trainingfieldsset:
             # JP Translation
             try:
@@ -337,7 +361,7 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
             # Print name and item count
             print(config.TrainingFields.find(x).name + ' x' \
-                + str(trainingfields.count(x)))
+                  + str(trainingfields.count(x)))
         for x in carditemsset:
             # JP Translation
             try:
@@ -358,16 +382,24 @@ def complete_stage(stage_id, difficulty, kagi = None):
 
     # Sell Cards
 
-    i = 0
+    i = 0, 1
     card_list = []
     if 'user_items' in dec_sign:
         if 'cards' in dec_sign['user_items']:
             for x in dec_sign['user_items']['cards']:
                 if config.Cards.find(x['card_id']).rarity == 0:
                     card_list.append(x['id'])
-    
-    if len(card_list)> 0:
+                if config.Cards.find(x['card_id']).rarity == 1:
+                    card_list.append(x['id'])
+                if config.Cards.find(x['card_id']).rarity == 2:
+                	card_list.append(x['id'])
+
+    if len(card_list) > 0:
         sell_cards(card_list)
+    if len(card_list) > 1:
+        sell_cards(card_list)
+    if len(card_list) > 2:
+    	sell_cards(card_list)
 
     # ## Finish timing level
 
@@ -377,40 +409,37 @@ def complete_stage(stage_id, difficulty, kagi = None):
     # #### COMPLETED STAGE
 
     print(Fore.GREEN + Style.BRIGHT + 'Completed stage: ' + str(stage_id) + ' in ' \
-        + str(timer_total) + ' seconds')
+          + str(timer_total) + ' seconds')
     print('##############################################')
 
 
 ####################################################################
 def get_friend(
-    stage_id,
-    difficulty,
-    ):
-
+        stage_id,
+        difficulty,
+):
     # Returns supporter for given stage_id & difficulty
     # Chooses cpu_supporter if possible
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/quests/' + stage_id
-                                + '/supporters'),
+                                    + '/supporters'),
         'Content-type': 'application/json',
         'X-Platform': 'config.platform',
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/quests/' + stage_id \
-            + '/supporters'
+              + '/supporters'
     else:
         url = 'http://ishin-production.aktsk.jp/quests/' + stage_id \
-            + '/supporters'
-    
+              + '/supporters'
+
     r = requests.get(url, headers=headers)
-
-
 
     '''
     if 'supporters' not in r.json():
@@ -418,7 +447,7 @@ def get_friend(
         response = SignIn(signup, AdId, UniqueId)
         RefreshClient()
         headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': GetMac('GET', '/quests/' + stage_id
                                 + '/supporters', MacId, secret1),
@@ -430,70 +459,71 @@ def get_friend(
         }
         r = requests.get(url, headers=headers)
     '''
-    #If CPU supporter available, choose it every time
+    # If CPU supporter available, choose it every time
     if 'cpu_supporters' in r.json():
         if int(difficulty) == 5:
             if 'super_hard3' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['super_hard3'
                        ]['cpu_friends']) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['super_hard3']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['super_hard3']
+                        ['cpu_friends'][0]['id']
+                    }
         if int(difficulty) == 4:
             if 'super_hard2' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['super_hard2'
                        ]['cpu_friends']) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['super_hard2']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['super_hard2']
+                        ['cpu_friends'][0]['id']
+                    }
         if int(difficulty) == 3:
             if 'super_hard1' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['super_hard1'
                        ]['cpu_friends']) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['super_hard1']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['super_hard1']
+                        ['cpu_friends'][0]['id']
+                    }
         if int(difficulty) == 2:
             if 'very_hard' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['very_hard'
                        ]['cpu_friends']) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['very_hard']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['very_hard']
+                        ['cpu_friends'][0]['id']
+                    }
         if int(difficulty) == 1:
             if 'hard' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['hard']['cpu_friends'
                        ]) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['hard']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['hard']
+                        ['cpu_friends'][0]['id']
+                    }
         if int(difficulty) == 0:
             if 'normal' in r.json()['cpu_supporters']:
                 if len(r.json()['cpu_supporters']['normal'
                        ]['cpu_friends']) > 0:
                     return {
-                            'is_cpu' : True,
-                            'id' : r.json()['cpu_supporters']['normal']
-                                           ['cpu_friends'][0]['id']
-                            }
+                        'is_cpu': True,
+                        'id': r.json()['cpu_supporters']['normal']
+                        ['cpu_friends'][0]['id']
+                    }
 
     return {
-            'is_cpu' : False,
-            'id' : r.json()['supporters'][0]['id']
-           }
+        'is_cpu': False,
+        'id': r.json()['supporters'][0]['id']
+    }
+
+
 ####################################################################
 def refill_stamina():
-
     # ## Restore user stamina
 
     stones = get_user()['user']['stone']
@@ -502,7 +532,7 @@ def refill_stamina():
         return 0
     if config.client == 'global':
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
             'Accept': '*/*',
             'Authorization': packet.mac('PUT', '/user/recover_act_with_stone'),
             'Content-type': 'application/json',
@@ -510,11 +540,11 @@ def refill_stamina():
             'X-AssetVersion': '////',
             'X-DatabaseVersion': '////',
             'X-ClientVersion': '////',
-            }
+        }
         url = 'https://ishin-global.aktsk.com/user/recover_act_with_stone'
     else:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
             'Accept': '*/*',
             'Authorization': packet.mac('PUT', '/user/recover_act_with_stone'),
             'Content-type': 'application/json',
@@ -522,18 +552,19 @@ def refill_stamina():
             'X-AssetVersion': '////',
             'X-DatabaseVersion': '////',
             'X-ClientVersion': '////',
-            }
+        }
         url = 'http://ishin-production.aktsk.jp/user/recover_act_with_stone'
-    
+
     r = requests.put(url, headers=headers)
     print(Fore.GREEN + Style.BRIGHT + 'STAMINA RESTORED')
+
+
 ####################################################################
 def get_user():
-
     # Returns user response from bandai
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/user'),
         'Content-type': 'application/json',
@@ -541,7 +572,7 @@ def get_user():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user'
     else:
@@ -552,10 +583,10 @@ def get_user():
 
 ####################################################################
 def sell_cards(card_list):
-    #Takes cards list and sells them in batches of 99
+    # Takes cards list and sells them in batches of 99
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/cards/sell'),
         'Content-type': 'application/json',
@@ -563,12 +594,11 @@ def sell_cards(card_list):
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/cards/sell'
     else:
         url = 'http://ishin-production.aktsk.jp/cards/sell'
-
 
     cards_to_sell = []
     i = 0
@@ -585,11 +615,12 @@ def sell_cards(card_list):
             i = 0
             cards_to_sell[:] = []
     if i != 0:
-            data = {'card_ids': cards_to_sell}
-            r = requests.post(url, data=json.dumps(data), headers=headers)
-            print('Sold Cards x' + str(len(cards_to_sell)))
-    #print(r.json())
-    
+        data = {'card_ids': cards_to_sell}
+        r = requests.post(url, data=json.dumps(data), headers=headers)
+        print('Sold Cards x' + str(len(cards_to_sell)))
+    # print(r.json())
+
+
 ####################################################################
 def signup():
     # returns string identifier to be formatted and used by SignIn function
@@ -606,20 +637,20 @@ def signup():
         'country': 'AU',
         'currency': 'AUD',
         'device': 'samsung',
-        'device_model': 'SM-E7000',
-        'os_version': '7.0',
+        'device_model': 'SM-G930V',
+        'os_version': '6.0',
         'platform': config.platform,
         'unique_id': config.UniqueId,
-        }
+    }
     user_account = json.dumps({'user_account': user_acc})
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/auth/sign_up'
     else:
@@ -629,13 +660,14 @@ def signup():
     # ## It is now necessary to solve the captcha. Opens browser window
     # ## in order to solve it. Script waits for user input before continuing
     if 'captcha_url' not in r.json():
-        print(Fore.RED + Style.BRIGHT+'Captcha could not be loaded...')
+        print(Fore.RED + Style.BRIGHT + 'Captcha could not be loaded...')
         return None
 
     url = r.json()['captcha_url']
     webbrowser.open(url, new=2)
     captcha_session_key = r.json()['captcha_session_key']
-    print('Opening captcha in browser. Press'+ Fore.RED + Style.BRIGHT+' ENTER '+Style.RESET_ALL +'once you have solved it...')
+    print(
+                'Opening captcha in browser. Press' + Fore.RED + Style.BRIGHT + ' ENTER ' + Style.RESET_ALL + 'once you have solved it...')
     input()
 
     # ## Query sign up again passing the captcha session key.
@@ -643,7 +675,7 @@ def signup():
 
     data = {'captcha_session_key': captcha_session_key,
             'user_account': user_acc}
-    
+
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/auth/sign_up'
     else:
@@ -668,17 +700,17 @@ def signin(identifier):
     basic_pwacc = identifier.split(':')
     complete_string = basic_pwacc[1] + ':' + basic_pwacc[0]
     basic_accpw = 'Basic ' \
-        + base64.b64encode(complete_string.encode('utf-8'
-                           )).decode('utf-8')
+                  + base64.b64encode(complete_string.encode('utf-8'
+                                                            )).decode('utf-8')
     data = json.dumps({
-                       'ad_id': packet.guid()['AdId'],
-                       'unique_id': packet.guid()['UniqueId']
-                      })
+        'ad_id': packet.guid()['AdId'],
+        'unique_id': packet.guid()['UniqueId']
+    })
 
     # print(data)
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': basic_accpw,
         'Content-type': 'application/json',
@@ -687,7 +719,7 @@ def signin(identifier):
         'X-UserCountry': 'AU',
         'X-UserCurrency': 'AUD',
         'X-Platform': config.platform,
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/auth/sign_in'
     else:
@@ -700,23 +732,25 @@ def signin(identifier):
         url = r.json()['captcha_url']
         webbrowser.open(url, new=2)
         captcha_session_key = r.json()['captcha_session_key']
-        print('Opening captcha in browser. Press'+ Fore.RED + Style.BRIGHT+' ENTER '+Style.RESET_ALL +'once you have solved it...')
+        print(
+                    'Opening captcha in browser. Press' + Fore.RED + Style.BRIGHT + ' ENTER ' + Style.RESET_ALL + 'once you have solved it...')
         input()
         r = requests.post(url, data=data, headers=headers)
 
     print(Fore.RED + Style.BRIGHT + 'SIGN IN COMPLETE' + Style.RESET_ALL)
 
     try:
-        return (r.json()['access_token'],r.json()['secret'])
-    except:            
+        return (r.json()['access_token'], r.json()['secret'])
+    except:
         return None
+
 
 ####################################################################
 def get_transfer_code():
     # Returns transfer code in dictionary
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/auth/link_codes'),
         'Content-type': 'application/json',
@@ -724,27 +758,28 @@ def get_transfer_code():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     data = {'eternal': 1}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/auth/link_codes'
     else:
         url = 'http://ishin-production.aktsk.jp/auth/link_codes'
-    
+
     r = requests.post(url, data=json.dumps(data), headers=headers)
     try:
-        print(r.json()['link_code'])
-        return {'transfer_code' : r.json()['link_code']}
+        print('Transfer Code:' + r.json()['link_code'])
+        return {'transfer_code': r.json()['link_code']}
     except:
         return None
+
+
 ####################################################################
 def tutorial():
-
     # ##Progress NULL TUTORIAL FINISH
 
     print(Fore.CYAN + Style.BRIGHT + 'Tutorial Progress: 1/8')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/tutorial/finish'),
         'Content-type': 'application/json',
@@ -752,7 +787,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/tutorial/finish'
     else:
@@ -762,7 +797,7 @@ def tutorial():
     # ##Progress NULL Gasha
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/tutorial/gasha'),
         'Content-type': 'application/json',
@@ -770,7 +805,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/tutorial/gasha'
     else:
@@ -781,7 +816,7 @@ def tutorial():
     # ##Progress to 999%
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/tutorial'),
         'Content-type': 'application/json',
@@ -789,7 +824,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     progress = {'progress': '999'}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/tutorial'
@@ -801,7 +836,7 @@ def tutorial():
     # ##Change User name
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/user'),
         'Content-type': 'application/json',
@@ -809,8 +844,8 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
-    user = {'user': {'name': 'Ninja'}}
+    }
+    user = {'user': {'name': make_name()}}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user'
     else:
@@ -821,7 +856,7 @@ def tutorial():
     # ##/missions/put_forward
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/missions/put_forward'),
         'Content-type': 'application/json',
@@ -829,7 +864,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/missions/put_forward'
     else:
@@ -840,7 +875,7 @@ def tutorial():
     # ##Apologies accept
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/apologies/accept'),
         'Content-type': 'application/json',
@@ -848,7 +883,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/apologies/accept'
     else:
@@ -858,7 +893,7 @@ def tutorial():
     # ##On Demand
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/user'),
         'Content-type': 'application/json',
@@ -866,7 +901,7 @@ def tutorial():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user'
     else:
@@ -879,14 +914,164 @@ def tutorial():
 
     print(Fore.CYAN + Style.BRIGHT + 'Tutorial Progress: 7/8')
     print(Fore.CYAN + Style.BRIGHT + 'Tutorial Progress: 8/8')
-    print(Fore.RED + Style.BRIGHT + 'TUTORIAL COMPLETE\n')
+    print(Fore.RED + Style.BRIGHT + 'TUTORIAL COMPLETE')
+
+
 ####################################################################
-def db_download():
+def jp_db_download():
     #
     jp_out_of_date = False
+
+    # Check local DB versions in help.txt
+    while True:
+        if os.path.isfile('help.txt'):
+            f = open(os.path.join('help.txt'), 'r')
+            local_version_jp = f.readline().rstrip()
+            f.close()
+            break
+        else:
+            f = open(os.path.join('help.txt'), 'w')
+            f.write('111\n')
+            f.write('111\n')
+            f.close()
+
+    # Check what is the current client this may end up being unnecessary
+    original_client = config.client
+
+
+
+    # Set second db to download to jp.
+    config.client = 'japan'
+    config.identifier = signup()
+    config.access_token, config.secret = signin(config.identifier)
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/client_assets/database'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        'X-Language': 'en',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/client_assets/database'
+    else:
+        url = 'http://ishin-production.aktsk.jp/client_assets/database'
+
+    r = requests.get(url, allow_redirects=True, headers=headers)
+    if local_version_jp != str(r.json()['version']):
+        jp_out_of_date = True
+        jp_current = r.json()['version']
+
+        print(Fore.RED + Style.BRIGHT + 'JP DB out of date...')
+        print(Fore.RED + Style.BRIGHT + 'Downloading...')
+        url = r.json()['url']
+        r = requests.get(url, allow_redirects=True)
+        open('dataenc_jp.db', 'wb').write(r.content)
+
+    # Revert client to original
+    config.client = original_client
+
+    print(Fore.RED + Style.BRIGHT \
+          + 'Decrypting Latest Databases... This can take a few minutes...')
+
+    # Calling database decrypt script
+    
+
+    if jp_out_of_date:
+        print('Decrypting JP Database')
+        decryptor.main(p='2db857e837e0a81706e86ea66e2d1633')
+        with open('help.txt', 'r') as file:
+            data = file.readlines()
+            data[1] = str(jp_current) + '\n'
+        with open('help.txt', 'w') as file:
+            file.writelines(data)
+
+    print(Fore.GREEN + Style.BRIGHT + 'Database update complete.')
+
+def glb_db_download():
+    #
     glb_out_of_date = False
 
-    #Check local DB versions in help.txt
+    # Check local DB versions in help.txt
+    while True:
+        if os.path.isfile('help.txt'):
+            f = open(os.path.join('help.txt'), 'r')
+            local_version_glb = f.readline().rstrip()
+            f.close()
+            break
+        else:
+            f = open(os.path.join('help.txt'), 'w')
+            f.write('111\n')
+            f.write('111\n')
+            f.close()
+
+    # Check what is the current client this may end up being unnecessary
+    original_client = config.client
+
+    # Set first db to download to global.
+    config.client = 'global'
+    config.identifier = signup()
+    config.access_token, config.secret = signin(config.identifier)
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/client_assets/database'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        'X-Language': 'en',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/client_assets/database'
+    else:
+        url = 'http://ishin-production.aktsk.jp/client_assets/database'
+
+    r = requests.get(url, allow_redirects=True, headers=headers)
+    if local_version_glb != str(r.json()['version']):
+        glb_out_of_date = True
+        glb_current = r.json()['version']
+
+        print(Fore.RED + Style.BRIGHT + 'GLB DB out of date...')
+        print(Fore.RED + Style.BRIGHT + 'Downloading...')
+        url = r.json()['url']
+        r = requests.get(url, allow_redirects=True)
+        open('dataenc_glb.db', 'wb').write(r.content)
+
+   
+
+    # Revert client to original
+    config.client = original_client
+
+    print(Fore.RED + Style.BRIGHT \
+          + 'Decrypting Latest Databases... This can take a few minutes...')
+
+    # Calling database decrypt script
+    if glb_out_of_date:
+        print('Decrypting Global Database')
+        decryptor.main()
+        with open('help.txt', 'r') as file:
+            data = file.readlines()
+            data[0] = str(glb_current) + '\n'
+        with open('help.txt', 'w') as file:
+            file.writelines(data)
+
+   
+    print(Fore.GREEN + Style.BRIGHT + 'Database update complete.')
+    
+def db_download():
+    #
+    #jp_out_of_date = False 
+    #JP is broken
+    glb_out_of_date = False
+
+    # Check local DB versions in help.txt
     while True:
         if os.path.isfile('help.txt'):
             f = open(os.path.join('help.txt'), 'r')
@@ -906,10 +1091,10 @@ def db_download():
     # Set first db to download to global.
     config.client = 'global'
     config.identifier = signup()
-    config.access_token,config.secret = signin(config.identifier)
-    
+    config.access_token, config.secret = signin(config.identifier)
+
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/client_assets/database'),
         'Content-type': 'application/json',
@@ -918,17 +1103,16 @@ def db_download():
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
         'X-Language': 'en',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/client_assets/database'
     else:
         url = 'http://ishin-production.aktsk.jp/client_assets/database'
-    
-    r = requests.get(url, allow_redirects=True,headers = headers)
+
+    r = requests.get(url, allow_redirects=True, headers=headers)
     if local_version_glb != str(r.json()['version']):
         glb_out_of_date = True
         glb_current = r.json()['version']
-        
 
         print(Fore.RED + Style.BRIGHT + 'GLB DB out of date...')
         print(Fore.RED + Style.BRIGHT + 'Downloading...')
@@ -936,14 +1120,13 @@ def db_download():
         r = requests.get(url, allow_redirects=True)
         open('dataenc_glb.db', 'wb').write(r.content)
 
-
     # Set second db to download to jp.
     config.client = 'japan'
     config.identifier = signup()
-    config.access_token,config.secret = signin(config.identifier)
+    config.access_token, config.secret = signin(config.identifier)
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/client_assets/database'),
         'Content-type': 'application/json',
@@ -952,17 +1135,17 @@ def db_download():
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
         'X-Language': 'en',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/client_assets/database'
     else:
         url = 'http://ishin-production.aktsk.jp/client_assets/database'
-    
-    r = requests.get(url, allow_redirects=True,headers = headers)
+
+    r = requests.get(url, allow_redirects=True, headers=headers)
     if local_version_jp != str(r.json()['version']):
         jp_out_of_date = True
         jp_current = r.json()['version']
-        
+
         print(Fore.RED + Style.BRIGHT + 'JP DB out of date...')
         print(Fore.RED + Style.BRIGHT + 'Downloading...')
         url = r.json()['url']
@@ -973,7 +1156,7 @@ def db_download():
     config.client = original_client
 
     print(Fore.RED + Style.BRIGHT \
-        + 'Decrypting Latest Databases... This can take a few minutes...\n')
+          + 'Decrypting Latest Databases... This can take a few minutes...')
 
     # Calling database decrypt script
     if glb_out_of_date:
@@ -987,7 +1170,7 @@ def db_download():
 
     if jp_out_of_date:
         print('Decrypting JP Database')
-        decryptor.main(p = '2db857e837e0a81706e86ea66e2d1633')
+        decryptor.main(p='2db857e837e0a81706e86ea66e2d1633')
         with open('help.txt', 'r') as file:
             data = file.readlines()
             data[1] = str(jp_current) + '\n'
@@ -995,58 +1178,59 @@ def db_download():
             file.writelines(data)
 
     print(Fore.GREEN + Style.BRIGHT + 'Database update complete.')
-    print() 
+
+
 ####################################################################
 def accept_missions():
     # Accept all remaining missions
 
     headers = {
-               'User-Agent':'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-               'Accept':'*/*',
-               'Authorization': packet.mac('GET', '/missions'),
-               'Content-type' : 'application/json',
-               'X-Platform' : config.platform,
-               'X-AssetVersion' : '////',
-               'X-DatabaseVersion' : '////',
-               'X-ClientVersion' : '////'
-               }
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/missions'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////'
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/missions'
     else:
         url = 'http://ishin-production.aktsk.jp/missions'
-    r = requests.get(url, headers = headers)
+    r = requests.get(url, headers=headers)
     missions = r.json()
     mission_list = []
     for mission in missions['missions']:
-        if mission['completed_at']!= None and mission['accepted_reward_at'] == None:
+        if mission['completed_at'] != None and mission['accepted_reward_at'] == None:
             mission_list.append(mission['id'])
 
     headers = {
-               'User-Agent':'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-               'Accept':'*/*',
-               'Authorization': packet.mac('POST', '/missions/accept'),
-               'Content-type' : 'application/json',
-               'X-Platform' : config.platform,
-               'X-AssetVersion' : '////',
-               'X-DatabaseVersion' : '////',
-               'X-ClientVersion' : '////'
-               }
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('POST', '/missions/accept'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////'
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/missions/accept'
     else:
         url = 'http://ishin-production.aktsk.jp/missions/accept'
-    data = {"mission_ids":mission_list}
-    r = requests.post(url, data = json.dumps(data),headers = headers)
+    data = {"mission_ids": mission_list}
+    r = requests.post(url, data=json.dumps(data), headers=headers)
     if 'error' not in r.json():
-        print(Fore.GREEN+ Style.BRIGHT+'Accepted missions')
-        print()
+        print(Fore.GREEN + Style.BRIGHT + 'Accepted missions')
+
+
 ####################################################################
 def accept_gifts():
-
     # Gets Gift Ids
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/gifts'),
         'Content-type': 'application/json',
@@ -1054,24 +1238,23 @@ def accept_gifts():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/gifts'
     else:
         url = 'http://ishin-production.aktsk.jp/gifts'
     r = requests.get(url, headers=headers)
-    
+
     gifts = []
     for x in r.json()['gifts']:
         gifts.append(x['id'])
-    
 
     # AcceptGifts
     if len(gifts) == 0:
         print('No gifts to accept...')
         return 0
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/gifts/accept'),
         'Content-type': 'application/json',
@@ -1079,29 +1262,30 @@ def accept_gifts():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/gifts/accept'
     else:
         url = 'http://ishin-production.aktsk.jp/gifts/accept'
 
-    chunks = [gifts[x:x+25] for x in range(0, len(gifts), 25)]
+    chunks = [gifts[x:x + 25] for x in range(0, len(gifts), 25)]
     for data in chunks:
         data = {'gift_ids': data}
         r = requests.post(url, data=json.dumps(data), headers=headers)
     if 'error' not in r.json():
-        print(Fore.GREEN + Style.BRIGHT +'Gifts Accepted...')
-        print() 
+        print(Fore.GREEN + Style.BRIGHT + 'Gifts Accepted...')
     else:
         print(r.json())
+
+
 ####################################################################
 def change_supporter():
     # Needs to have translation properly implemented!
-    
+
     ###Get user cards
     print(Fore.CYAN + Style.BRIGHT + 'Fetching user cards...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/cards'),
         'Content-type': 'application/json',
@@ -1110,7 +1294,7 @@ def change_supporter():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/cards'
     else:
@@ -1123,14 +1307,14 @@ def change_supporter():
     print(Fore.CYAN + Style.BRIGHT + 'Fetching card attributes...')
     card_list = []
     for card in master_cards:
-        ###Get card collection object from database 
+        ###Get card collection object from database
         try:
             config.Model.set_connection_resolver(config.db_glb)
             db_card = config.Cards.find_or_fail(card['card_id'])
         except:
             config.Model.set_connection_resolver(config.db_jp)
             db_card = config.Cards.find_or_fail(card['card_id'])
-        #db_card = config.Cards.where('id','=',card['card_id']).first()
+        # db_card = config.Cards.where('id','=',card['card_id']).first()
 
         ###Get card rarity
         if db_card.rarity == 0:
@@ -1140,38 +1324,38 @@ def change_supporter():
         elif db_card.rarity == 2:
             rarity = 'SR'
         elif db_card.rarity == 3:
-            rarity ='SSR'
+            rarity = 'SSR'
         elif db_card.rarity == 4:
             rarity = 'UR'
         elif db_card.rarity == 5:
             rarity = 'LR'
         ###Get card Type
         if str(db_card.element)[-1] == '0':
-            type ='[AGL] '
+            type = '[AGL] '
         elif str(db_card.element)[-1] == '1':
-            type ='[TEQ] '
+            type = '[TEQ] '
         elif str(db_card.element)[-1] == '2':
-            type ='[INT] '
+            type = '[INT] '
         elif str(db_card.element)[-1] == '3':
-            type ='[STR] '
+            type = '[STR] '
         elif str(db_card.element)[-1] == '4':
-            type ='[PHY] '
+            type = '[PHY] '
         ###Get card categories list
         categories = []
-        #Get category id's given card id
+        # Get category id's given card id
         card_card_categories = config.CardCardCategories.where(
-                               'card_id','=',db_card.id).get()
-                
+            'card_id', '=', db_card.id).get()
+
         try:
             for category in card_card_categories:
                 try:
                     config.Model.set_connection_resolver(config.db_glb)
                     categories.append(config.CardCategories.find(
-                                  category.card_category_id).name)
+                        category.card_category_id).name)
                 except:
                     config.Model.set_connection_resolver(config.db_jp)
                     categories.append(config.CardCategories.find(
-                                  category.card_category_id).name)
+                        category.card_category_id).name)
         except:
             None
         ###Get card link_skills list
@@ -1255,17 +1439,17 @@ def change_supporter():
             None
 
         dict = {
-                'ID': db_card.id,
-                'Rarity': rarity,
-                'Name': db_card.name,
-                'Type': type,
-                'Cost': db_card.cost,
-                'Hercule': db_card.is_selling_only,
-                'HP': db_card.hp_init,
-                'Categories':categories,
-                'Links':link_skills,
-                'UniqueID': card['id']
-                }
+            'ID': db_card.id,
+            'Rarity': rarity,
+            'Name': db_card.name,
+            'Type': type,
+            'Cost': db_card.cost,
+            'Hercule': db_card.is_selling_only,
+            'HP': db_card.hp_init,
+            'Categories': categories,
+            'Links': link_skills,
+            'UniqueID': card['id']
+        }
         card_list.append(dict)
     print(Fore.GREEN + Style.BRIGHT + "Done...")
 
@@ -1278,11 +1462,13 @@ def change_supporter():
     ###Define cards to display
     cards_to_display_dicts = []
     cards_to_display = []
-    #Take cards in card_list that aren't hercule statues or kais?
+    # Take cards in card_list that aren't hercule statues or kais?
     for char in card_list:
         if char['Hercule'] != 1 and char['HP'] > 5:
             cards_to_display_dicts.append(char)
-            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
+            cards_to_display.append(
+                char['Type'] + char['Rarity'] + ' ' + char['Name'] + ' | ' + str(char['ID']) + ' | ' + str(
+                    char['UniqueID']) + ' | ' ' x '+str(x['quantity']))
 
     ###Define links to display
     links_master = []
@@ -1295,7 +1481,7 @@ def change_supporter():
         except:
             config.Model.set_connection_resolver(config.db_jp)
             links_master.append(config.LinkSkills.find_or_fail(link.id).name)
-    
+
     links_to_display = sorted(links_master)
 
     ###Define categories to display
@@ -1308,28 +1494,27 @@ def change_supporter():
         except:
             config.Model.set_connection_resolver(config.db_jp)
             categories_master.append(config.CardCategories.find_or_fail(category.id).name)
-    
+
     categories_to_display = sorted(categories_master)
-    
+
     ###Define window layout
 
-    col1 = [[sg.Listbox(values=(cards_to_display),size = (30,20),key='CARDS')],
-            [sg.Listbox(values=([]),size = (30,6),key = 'CARDS_CHOSEN')],
-            [sg.Button(button_text = 'Set as Supporter',key='choose_card')]]
+    col1 = [[sg.Listbox(values=(cards_to_display), size=(30, 20), key='CARDS')],
+            [sg.Listbox(values=([]), size=(30, 6), key='CARDS_CHOSEN')],
+            [sg.Button(button_text='Set as Supporter', key='choose_card')]]
 
-    col2 = [[sg.Listbox(values=(sorted(categories_to_display)),size = (25,20),key = 'CATEGORIES')],
-            [sg.Listbox(values=([]),size = (25,6),key = 'CATEGORIES_CHOSEN')],
-            [sg.Button(button_text ='Choose Categories',key='choose_categories'),
-             sg.Button(button_text ='Clear Categories',key='clear_categories')]]
+    col2 = [[sg.Listbox(values=(sorted(categories_to_display)), size=(25, 20), key='CATEGORIES')],
+            [sg.Listbox(values=([]), size=(25, 6), key='CATEGORIES_CHOSEN')],
+            [sg.Button(button_text='Choose Categories', key='choose_categories'),
+             sg.Button(button_text='Clear Categories', key='clear_categories')]]
 
-    col3 = [[sg.Listbox(values=(sorted(links_to_display)),size = (25,20),key='LINKS')],
-            [sg.Listbox(values=([]),size = (25,6),key = 'LINKS_CHOSEN')],
-            [sg.Button(button_text ='Choose Links',key='choose_links'),
-             sg.Button(button_text ='Clear Links',key='clear_links')]]
+    col3 = [[sg.Listbox(values=(sorted(links_to_display)), size=(25, 20), key='LINKS')],
+            [sg.Listbox(values=([]), size=(25, 6), key='LINKS_CHOSEN')],
+            [sg.Button(button_text='Choose Links', key='choose_links'),
+             sg.Button(button_text='Clear Links', key='clear_links')]]
 
-    layout = [[sg.Column(col1),sg.Column(col2),sg.Column(col3)]]
-    window = sg.Window('Supporter Update',grab_anywhere=True,keep_on_top = True).Layout(layout)
-    
+    layout = [[sg.Column(col1), sg.Column(col2), sg.Column(col3)]]
+    window = sg.Window('Supporter Update', grab_anywhere=True, keep_on_top=True).Layout(layout)
 
     ###Begin window loop
     chosen_links = []
@@ -1342,17 +1527,17 @@ def change_supporter():
     chosen_cards_to_display = []
 
     while len(chosen_cards_ids) < 1:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             return 0
-        
+
         if event == 'choose_card':
             if len(values['CARDS']) < 1:
                 continue
-            #Get ID of chosen card to send to bandai
+            # Get ID of chosen card to send to bandai
             chosen_line = values['CARDS'][0]
-            char_name,char_id,char_unique_id = chosen_line.split(' | ')
+            char_name, char_id, char_unique_id = chosen_line.split(' | ')
             chosen_cards_ids.append(int(char_id))
             chosen_cards_unique_ids.append(int(char_unique_id))
             try:
@@ -1362,8 +1547,7 @@ def change_supporter():
                 config.Model.set_connection_resolver(config.db_jp)
                 chosen_cards_names.append(config.Cards.find(char_id).name)
 
-
-            #Chosen cards to display in lower box
+            # Chosen cards to display in lower box
             chosen_cards_to_display.append(chosen_line)
 
         if event == 'choose_categories':
@@ -1375,7 +1559,6 @@ def change_supporter():
             categories_to_display.extend(chosen_categories)
             chosen_categories[:] = []
             categories_to_display = sorted(categories_to_display)
-            
 
         if event == 'choose_links':
             for link in values['LINKS']:
@@ -1395,15 +1578,16 @@ def change_supporter():
                 continue
 
             if len(list(set(chosen_links) & set(char['Links']))) != len(chosen_links):
-                #print("List intersection")
+                # print("List intersection")
                 continue
 
             if len(list(set(chosen_categories) & set(char['Categories']))) != len(chosen_categories):
-                #print("Category intersectino")
+                # print("Category intersectino")
                 continue
 
-            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
-
+            cards_to_display.append(
+                char['Type'] + char['Rarity'] + ' ' + char['Name'] + ' | ' + str(char['ID']) + ' | ' + str(
+                    char['UniqueID']))
 
         ###Update window elements
         window.FindElement('CARDS').Update(values=cards_to_display)
@@ -1416,7 +1600,7 @@ def change_supporter():
     window.Close()
     ###Send selected supporter to bandai
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/support_leaders'),
         'Content-type': 'application/json',
@@ -1424,23 +1608,25 @@ def change_supporter():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/support_leaders'
     else:
         url = 'http://ishin-production.aktsk.jp/support_leaders'
-    #print(chosen_cards_unique_ids)
-    data = {'support_leader_ids':chosen_cards_unique_ids}
-    #print(data)
-    r = requests.put(url, data = json.dumps(data),headers = headers)
+    # print(chosen_cards_unique_ids)
+    data = {'support_leader_ids': chosen_cards_unique_ids}
+    # print(data)
+    r = requests.put(url, data=json.dumps(data), headers=headers)
     if 'error' in r.json():
-        print(Fore.RED + Style.BRIGHT+str(r.json()))
+        print(Fore.RED + Style.BRIGHT + str(r.json()))
     else:
-        #print(r.json())
+        # print(r.json())
         print(chosen_cards_names)
-        print(Fore.GREEN + Style.BRIGHT+"Supporter updated!")
+        print(Fore.GREEN + Style.BRIGHT + "Supporter updated!")
 
     return 0
+
+
 ####################################################################
 def change_team():
     # Needs to have translation properly implemented!
@@ -1451,7 +1637,7 @@ def change_team():
     ###Get user cards
     print(Fore.CYAN + Style.BRIGHT + 'Fetching user cards...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/cards'),
         'Content-type': 'application/json',
@@ -1460,7 +1646,7 @@ def change_team():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/cards'
     else:
@@ -1473,14 +1659,14 @@ def change_team():
     print(Fore.CYAN + Style.BRIGHT + 'Fetching card attributes...')
     card_list = []
     for card in master_cards:
-        ###Get card collection object from database 
+        ###Get card collection object from database
         try:
             config.Model.set_connection_resolver(config.db_glb)
             db_card = config.Cards.find_or_fail(card['card_id'])
         except:
             config.Model.set_connection_resolver(config.db_jp)
             db_card = config.Cards.find_or_fail(card['card_id'])
-        #db_card = config.Cards.where('id','=',card['card_id']).first()
+        # db_card = config.Cards.where('id','=',card['card_id']).first()
 
         ###Get card rarity
         if db_card.rarity == 0:
@@ -1490,38 +1676,38 @@ def change_team():
         elif db_card.rarity == 2:
             rarity = 'SR'
         elif db_card.rarity == 3:
-            rarity ='SSR'
+            rarity = 'SSR'
         elif db_card.rarity == 4:
             rarity = 'UR'
         elif db_card.rarity == 5:
             rarity = 'LR'
         ###Get card Type
         if str(db_card.element)[-1] == '0':
-            type ='[AGL] '
+            type = '[AGL] '
         elif str(db_card.element)[-1] == '1':
-            type ='[TEQ] '
+            type = '[TEQ] '
         elif str(db_card.element)[-1] == '2':
-            type ='[INT] '
+            type = '[INT] '
         elif str(db_card.element)[-1] == '3':
-            type ='[STR] '
+            type = '[STR] '
         elif str(db_card.element)[-1] == '4':
-            type ='[PHY] '
+            type = '[PHY] '
         ###Get card categories list
         categories = []
-        #Get category id's given card id
+        # Get category id's given card id
         card_card_categories = config.CardCardCategories.where(
-                               'card_id','=',db_card.id).get()
-                
+            'card_id', '=', db_card.id).get()
+
         try:
             for category in card_card_categories:
                 try:
                     config.Model.set_connection_resolver(config.db_glb)
                     categories.append(config.CardCategories.find(
-                                  category.card_category_id).name)
+                        category.card_category_id).name)
                 except:
                     config.Model.set_connection_resolver(config.db_jp)
                     categories.append(config.CardCategories.find(
-                                  category.card_category_id).name)
+                        category.card_category_id).name)
         except:
             None
         ###Get card link_skills list
@@ -1605,17 +1791,17 @@ def change_team():
             None
 
         dict = {
-                'ID': db_card.id,
-                'Rarity': rarity,
-                'Name': db_card.name,
-                'Type': type,
-                'Cost': db_card.cost,
-                'Hercule': db_card.is_selling_only,
-                'HP': db_card.hp_init,
-                'Categories':categories,
-                'Links':link_skills,
-                'UniqueID': card['id']
-                }
+            'ID': db_card.id,
+            'Rarity': rarity,
+            'Name': db_card.name,
+            'Type': type,
+            'Cost': db_card.cost,
+            'Hercule': db_card.is_selling_only,
+            'HP': db_card.hp_init,
+            'Categories': categories,
+            'Links': link_skills,
+            'UniqueID': card['id']
+        }
         card_list.append(dict)
     print(Fore.GREEN + Style.BRIGHT + "Done...")
 
@@ -1628,11 +1814,13 @@ def change_team():
     ###Define cards to display
     cards_to_display_dicts = []
     cards_to_display = []
-    #Take cards in card_list that aren't hercule statues or kais?
+    # Take cards in card_list that aren't hercule statues or kais?
     for char in card_list:
         if char['Hercule'] != 1 and char['HP'] > 5:
             cards_to_display_dicts.append(char)
-            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
+            cards_to_display.append(
+                char['Type'] + char['Rarity'] + ' ' + char['Name'] + ' | ' + str(char['ID']) + ' | ' + str(
+                    char['UniqueID']))
 
     ###Define links to display
     links_master = []
@@ -1645,7 +1833,7 @@ def change_team():
         except:
             config.Model.set_connection_resolver(config.db_jp)
             links_master.append(config.LinkSkills.find_or_fail(link.id).name)
-    
+
     links_to_display = sorted(links_master)
 
     ###Define categories to display
@@ -1658,29 +1846,28 @@ def change_team():
         except:
             config.Model.set_connection_resolver(config.db_jp)
             categories_master.append(config.CardCategories.find_or_fail(category.id).name)
-    
+
     categories_to_display = sorted(categories_master)
 
     ###Define window layout
 
-    col1 = [[sg.Listbox(values=(cards_to_display),size = (30,20),key='CARDS')],
-            [sg.Listbox(values=([]),size = (30,6),key = 'CARDS_CHOSEN')],
-            [sg.Button(button_text = 'Choose Card',key='choose_card'),
-             sg.Button(button_text='Confirm Team',key='confirm_team')]]
+    col1 = [[sg.Listbox(values=(cards_to_display), size=(30, 20), key='CARDS')],
+            [sg.Listbox(values=([]), size=(30, 6), key='CARDS_CHOSEN')],
+            [sg.Button(button_text='Choose Card', key='choose_card'),
+             sg.Button(button_text='Confirm Team', key='confirm_team')]]
 
-    col2 = [[sg.Listbox(values=(sorted(categories_to_display)),size = (25,20),key = 'CATEGORIES')],
-            [sg.Listbox(values=([]),size = (25,6),key = 'CATEGORIES_CHOSEN')],
-            [sg.Button(button_text ='Choose Categories',key='choose_categories'),
-             sg.Button(button_text ='Clear Categories',key='clear_categories')]]
+    col2 = [[sg.Listbox(values=(sorted(categories_to_display)), size=(25, 20), key='CATEGORIES')],
+            [sg.Listbox(values=([]), size=(25, 6), key='CATEGORIES_CHOSEN')],
+            [sg.Button(button_text='Choose Categories', key='choose_categories'),
+             sg.Button(button_text='Clear Categories', key='clear_categories')]]
 
-    col3 = [[sg.Listbox(values=(sorted(links_to_display)),size = (25,20),key='LINKS')],
-            [sg.Listbox(values=([]),size = (25,6),key = 'LINKS_CHOSEN')],
-            [sg.Button(button_text ='Choose Links',key='choose_links'),
-             sg.Button(button_text ='Clear Links',key='clear_links')]]
+    col3 = [[sg.Listbox(values=(sorted(links_to_display)), size=(25, 20), key='LINKS')],
+            [sg.Listbox(values=([]), size=(25, 6), key='LINKS_CHOSEN')],
+            [sg.Button(button_text='Choose Links', key='choose_links'),
+             sg.Button(button_text='Clear Links', key='clear_links')]]
 
-    layout = [[sg.Column(col1),sg.Column(col2),sg.Column(col3)]]
-    window = sg.Window('Deck Update',grab_anywhere=True,keep_on_top = True).Layout(layout)
-    
+    layout = [[sg.Column(col1), sg.Column(col2), sg.Column(col3)]]
+    window = sg.Window('Deck Update', grab_anywhere=True, keep_on_top=True).Layout(layout)
 
     ###Begin window loop
     chosen_links = []
@@ -1693,17 +1880,17 @@ def change_team():
     chosen_cards_to_display = []
 
     while len(chosen_cards_ids) < 6:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             return 0
-        
+
         if event == 'choose_card':
             if len(values['CARDS']) < 1:
                 continue
-            #Get ID of chosen card to send to bandai
+            # Get ID of chosen card to send to bandai
             chosen_line = values['CARDS'][0]
-            char_name,char_id,char_unique_id = chosen_line.split(' | ')
+            char_name, char_id, char_unique_id = chosen_line.split(' | ')
             chosen_cards_ids.append(int(char_id))
             chosen_cards_unique_ids.append(int(char_unique_id))
             try:
@@ -1713,8 +1900,7 @@ def change_team():
                 config.Model.set_connection_resolver(config.db_jp)
                 chosen_cards_names.append(config.Cards.find(char_id).name)
 
-
-            #Chosen cards to display in lower box
+            # Chosen cards to display in lower box
             chosen_cards_to_display.append(chosen_line)
 
         if event == 'choose_categories':
@@ -1726,7 +1912,6 @@ def change_team():
             categories_to_display.extend(chosen_categories)
             chosen_categories[:] = []
             categories_to_display = sorted(categories_to_display)
-            
 
         if event == 'choose_links':
             for link in values['LINKS']:
@@ -1737,17 +1922,16 @@ def change_team():
             links_to_display.extend(chosen_links)
             chosen_links[:] = []
             links_to_display = sorted(links_to_display)
-        
+
         if event == 'confirm_team':
             if len(chosen_cards_unique_ids) < 6:
                 if len(chosen_cards_unique_ids) == 0:
-                    print(Fore.RED + Style.BRIGHT+'No cards selected.')
+                    print(Fore.RED + Style.BRIGHT + 'No cards selected.')
                     return 0
                 loop = 6 - len(chosen_cards_unique_ids)
                 for i in range(int(loop)):
                     chosen_cards_unique_ids.append('0')
                 break
-
 
         ###Re-populate cards to display, checking filter criteria
         cards_to_display[:] = []
@@ -1756,15 +1940,16 @@ def change_team():
                 continue
 
             if len(list(set(chosen_links) & set(char['Links']))) != len(chosen_links):
-                #print("List intersection")
+                # print("List intersection")
                 continue
 
             if len(list(set(chosen_categories) & set(char['Categories']))) != len(chosen_categories):
-                #print("Category intersectino")
+                # print("Category intersectino")
                 continue
 
-            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
-
+            cards_to_display.append(
+                char['Type'] + char['Rarity'] + ' ' + char['Name'] + ' | ' + str(char['ID']) + ' | ' + str(
+                    char['UniqueID']))
 
         ###Update window elements
         window.FindElement('CARDS').Update(values=cards_to_display)
@@ -1777,7 +1962,7 @@ def change_team():
     window.Close()
     ###Send selected team to bandai
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/teams'),
         'Content-type': 'application/json',
@@ -1785,32 +1970,33 @@ def change_team():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/teams'
     else:
         url = 'http://ishin-production.aktsk.jp/teams'
-    #print(chosen_cards_unique_ids)
+    # print(chosen_cards_unique_ids)
     data = {'selected_team_num': 1, 'user_card_teams': [
         {'num': chosen_deck, 'user_card_ids': chosen_cards_unique_ids},
-        ]}
-    #print(data)
-    r = requests.post(url, data = json.dumps(data),headers = headers)
+    ]}
+    # print(data)
+    r = requests.post(url, data=json.dumps(data), headers=headers)
     if 'error' in r.json():
-        print(Fore.RED + Style.BRIGHT+str(r.json()))
+        print(Fore.RED + Style.BRIGHT + str(r.json()))
     else:
-        #print(r.json())
+        # print(r.json())
         print(chosen_cards_names)
-        print(Fore.GREEN + Style.BRIGHT+"Deck updated!")
+        print(Fore.GREEN + Style.BRIGHT + "Deck updated!")
 
     return 0
+
 
 ####################################################################
 def get_kagi_id(stage):
     # return kagi ID to use for a stage
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/eventkagi_items'),
         'Content-type': 'application/json',
@@ -1818,7 +2004,7 @@ def get_kagi_id(stage):
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/eventkagi_items'
     else:
@@ -1844,6 +2030,8 @@ def get_kagi_id(stage):
                 return None
 
     return None
+
+
 ####################################################################
 
 def complete_unfinished_quest_stages():
@@ -1851,7 +2039,7 @@ def complete_unfinished_quest_stages():
     # type: (object, object) -> object
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/user_areas'),
         'Content-type': 'application/json',
@@ -1860,7 +2048,7 @@ def complete_unfinished_quest_stages():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user_areas'
     else:
@@ -1880,24 +2068,24 @@ def complete_unfinished_quest_stages():
 
     i = 0
     while i == 0:
-        #print(maps)
+        # print(maps)
         for map in maps:
             complete_stage(str(map['sugoroku_map_id'])[:-1], str(map['sugoroku_map_id'])[-1])
 
         headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-        'Accept': '*/*',
-        'Authorization': packet.mac('GET', '/user_areas'),
-        'Content-type': 'application/json',
-        'X-Language': 'en',
-        'X-Platform': config.platform,
-        'X-AssetVersion': '////',
-        'X-DatabaseVersion': '////',
-        'X-ClientVersion': '////',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'Accept': '*/*',
+            'Authorization': packet.mac('GET', '/user_areas'),
+            'Content-type': 'application/json',
+            'X-Language': 'en',
+            'X-Platform': config.platform,
+            'X-AssetVersion': '////',
+            'X-DatabaseVersion': '////',
+            'X-ClientVersion': '////',
         }
         r = requests.get(url, headers=headers)
         maps_check = []
-        #print(r.json())
+        # print(r.json())
         for user in r.json()['user_areas']:
             for map in user['user_sugoroku_maps']:
                 if map['cleared_count'] == 0 and map['sugoroku_map_id'] < 999999 and map['sugoroku_map_id'] > 100:
@@ -1908,15 +2096,19 @@ def complete_unfinished_quest_stages():
             maps = maps_check
             refresh_client()
     return 1
+
+
 ####################################################################
 def refresh_client():
-    config.access_token,config.secret = signin(config.identifier)
-    print(Fore.GREEN + Style.BRIGHT+'Refreshed Token')
+    config.access_token, config.secret = signin(config.identifier)
+    print(Fore.GREEN + Style.BRIGHT + 'Refreshed Token')
+
+
 ####################################################################
 def change_name():
     # Changes name associated with account
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/user'),
         'Content-type': 'application/json',
@@ -1924,7 +2116,7 @@ def change_name():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     name = input('What would you like to change your name to?: ')
     user = {'user': {'name': name}}
     if config.client == 'global':
@@ -1935,14 +2127,15 @@ def change_name():
     if 'error' in r.json():
         print(r.json())
     else:
-        print("Name changed to: "+name)
+        print("Name changed to: " + name)
+
+
 ####################################################################
 def increase_capacity():
-
     # Increases account card capacity by 5 every time it is called
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/user/capacity/card'),
         'Content-type': 'application/json',
@@ -1950,57 +2143,19 @@ def increase_capacity():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user/capacity/card'
     else:
         url = 'http://ishin-production.aktsk.jp/user/capacity/card'
-    
+
     r = requests.post(url, headers=headers)
     if 'error' in r.json():
         print(Fore.RED + Style.BRIGHT + str(r.json()))
     else:
         print(Fore.GREEN + Style.BRIGHT + 'Card capacity +5')
-####################################################################
-
-def lr_pan():
-    #LR Pan event
-    # Even More Secret Adventures 177001 Difficulties: [1] AreaID: 177
-    print('Going to slay Pan event (LR)')
-    complete_stage('177001',1)
-    accept_gifts()
-    accept_missions()
-
-####################################################################
-def bossrush():
-    print('Attempting to do Boss Rush...')
-    complete_stage('701001',3)
-    complete_stage('701001',4)
-    complete_stage('701002',4)
-    complete_stage('701002',5)
-    complete_stage('701003',5)
-    complete_stage('701004',5)
-    complete_stage('701005',5)
-    complete_stage('701006',5)
-    complete_stage('701007',5)
-    complete_stage('701008',5)
-    accept_missions()
-    print('Boss Rush - it is done.')
-#Dokkan Event Boss Rush 1 701001 Difficulties: [3, 4] AreaID: 701
-#Dokkan Event Boss Rush 2 701002 Difficulties: [4, 5] AreaID: 701
-#Dokkan Event Boss Rush 3 701003 Difficulties: [5] AreaID: 701
-#Dokkan Event Boss Rush 4 701004 Difficulties: [5] AreaID: 701
-#Dokkan Event Boss Rush 5 701005 Difficulties: [5] AreaID: 701
-#Dokkan Event Boss Rush 6 701006 Difficulties: [5] AreaID: 701
-#Dokkan Event Boss Rush 7 701007 Difficulties: [5] AreaID: 701
 
 
-
-####################################################################
-
-def rank_up():
-
-    # ## Returns User Info, we will use rank later on
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
@@ -2045,15 +2200,15 @@ def rank_up():
         print(Fore.GREEN + Style.BRIGHT + 'Done!')
             
         
+=======
+
 ####################################################################
 
-
 def get_user_info():
-
     # ## Returns User dictionary and info
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/user'),
         'Content-type': 'application/json',
@@ -2061,7 +2216,7 @@ def get_user_info():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user'
     else:
@@ -2069,7 +2224,7 @@ def get_user_info():
     r = requests.get(url, headers=headers)
     user = r.json()
 
-    print('Account OS: '+config.platform.upper())
+    print('Account OS: ' + config.platform.upper())
     print('User ID: ' + str(user['user']['id']))
     print('Stones: ' + str(user['user']['stone']))
     print('Zeni: ' + str(user['user']['zeni']))
@@ -2077,6 +2232,8 @@ def get_user_info():
     print('Stamina: ' + str(user['user']['act']))
     print('Name: ' + str(user['user']['name']))
     print('Total Card Capacity: ' + str(user['user']['total_card_capacity']))
+
+
 ####################################################################
 def complete_unfinished_events():
     # ## Will eventually use this to streamline stuff
@@ -2085,7 +2242,7 @@ def complete_unfinished_events():
     # ## Gets current events json which contains some useful data
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/events'),
         'Content-type': 'application/json',
@@ -2094,7 +2251,7 @@ def complete_unfinished_events():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/events'
     else:
@@ -2112,7 +2269,7 @@ def complete_unfinished_events():
 
     ### Complete areas if they are in the current ID pool
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/user_areas'),
         'Content-type': 'application/json',
@@ -2121,7 +2278,7 @@ def complete_unfinished_events():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/user_areas'
     else:
@@ -2134,14 +2291,16 @@ def complete_unfinished_events():
             for stage in area['user_sugoroku_maps']:
                 if stage['cleared_count'] == 0:
                     complete_stage(str(stage['sugoroku_map_id'])[:-1], str(stage['sugoroku_map_id'])[-1])
-                    i+=1
+                    i += 1
         if i % 30 == 0:
             refresh_client()
+
+
 ####################################################################
 def complete_clash():
     print('Fetching current clash...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/resources/home?rmbattles=true'),
         'X-Language': 'en',
@@ -2150,7 +2309,7 @@ def complete_clash():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/resources/home?rmbattles=true'
     else:
@@ -2161,43 +2320,43 @@ def complete_clash():
     #### dropout
     print('Resetting clash to beginning...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
-        'Authorization': packet.mac('POST', '/rmbattles/'+str(clash_id)+'/stages/dropout'),
+        'Authorization': packet.mac('POST', '/rmbattles/' + str(clash_id) + '/stages/dropout'),
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     sign = {
         'reason': "dropout"
     }
     if config.client == 'global':
-        url = 'https://ishin-global.aktsk.com/rmbattles/'+str(clash_id)+'/stages/dropout'
+        url = 'https://ishin-global.aktsk.com/rmbattles/' + str(clash_id) + '/stages/dropout'
     else:
-        url = 'http://ishin-production.aktsk.jp/rmbattles/'+str(clash_id)+'/stages/dropout'
-    
+        url = 'http://ishin-production.aktsk.jp/rmbattles/' + str(clash_id) + '/stages/dropout'
+
     r = requests.post(url, data=json.dumps(sign), headers=headers)
     print('Reset complete...')
 
     print('Fetching list of stages from Bandai...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
-        'Authorization': packet.mac('GET', '/rmbattles/'+str(clash_id)),
+        'Authorization': packet.mac('GET', '/rmbattles/' + str(clash_id)),
         'X-Language': 'en',
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
-        url = 'https://ishin-global.aktsk.com/rmbattles/'+str(clash_id)
+        url = 'https://ishin-global.aktsk.com/rmbattles/' + str(clash_id)
     else:
-        url = 'http://ishin-production.aktsk.jp/rmbattles/'+str(clash_id)
-    
+        url = 'http://ishin-production.aktsk.jp/rmbattles/' + str(clash_id)
+
     r = requests.get(url, headers=headers)
 
     available_stages = []
@@ -2207,7 +2366,7 @@ def complete_clash():
     print('Stages obtained...')
     print('Asking Bandai for available cards...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/rmbattles/available_user_cards'),
         'X-Language': 'en',
@@ -2216,30 +2375,29 @@ def complete_clash():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/rmbattles/available_user_cards'
     else:
         url = 'http://ishin-production.aktsk.jp/rmbattles/available_user_cards'
-    
+
     r = requests.get(url, headers=headers)
     print('Cards received...')
     available_user_cards = []
-    #print(r.json())
+    # print(r.json())
     for card in r.json():
         available_user_cards.append(card)
-    available_user_cards= available_user_cards[:99]
+    available_user_cards = available_user_cards[:99]
 
     if len(available_user_cards) == 0:
-        print(Fore.RED + Style.BRIGHT+"Not enough cards to complete Battlefield with!")
+        print(Fore.RED + Style.BRIGHT + "Not enough cards to complete Battlefield with!")
         return 0
 
-
     is_beginning = True
-    #print(available_stages)
+    # print(available_stages)
     print('Sending Bandai full team...')
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('PUT', '/rmbattles/teams/1'),
         'X-Language': 'en',
@@ -2248,13 +2406,13 @@ def complete_clash():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     data = {'user_card_ids': available_user_cards}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/rmbattles/teams/1'
     else:
         url = 'http://ishin-production.aktsk.jp/rmbattles/teams/1'
-    
+
     r = requests.put(url, data=json.dumps(data), headers=headers)
     print('Sent!')
     print('')
@@ -2267,35 +2425,35 @@ def complete_clash():
 
         sign = {
             'is_beginning': is_beginning,
-            'user_card_ids':{
-            'leader': leader,
-            'members': members,
-            'sub_leader': sub_leader
-                }
+            'user_card_ids': {
+                'leader': leader,
+                'members': members,
+                'sub_leader': sub_leader
             }
+        }
 
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
             'Accept': '*/*',
-            'Authorization': packet.mac('POST', '/rmbattles/'+str(clash_id)+'/stages/'+str(stage)+'/start'),
+            'Authorization': packet.mac('POST', '/rmbattles/' + str(clash_id) + '/stages/' + str(stage) + '/start'),
             'Content-type': 'application/json',
             'X-Platform': config.platform,
             'X-AssetVersion': '////',
             'X-DatabaseVersion': '////',
             'X-ClientVersion': '////',
-            }
+        }
         if config.client == 'global':
-            url = 'https://ishin-global.aktsk.com/rmbattles/'+str(clash_id)+'/stages/'+str(stage)+'/start'
+            url = 'https://ishin-global.aktsk.com/rmbattles/' + str(clash_id) + '/stages/' + str(stage) + '/start'
         else:
-            url = 'http://ishin-production.aktsk.jp/rmbattles/'+str(clash_id)+'/stages/'+str(stage)+'/start'
-        
+            url = 'http://ishin-production.aktsk.jp/rmbattles/' + str(clash_id) + '/stages/' + str(stage) + '/start'
+
         r = requests.post(url, data=json.dumps(sign), headers=headers)
-        print('Commencing Stage '+Fore.YELLOW+str(stage))
+        print('Commencing Stage ' + Fore.YELLOW + str(stage))
 
         is_beginning = False
 
         ###Second request
-        finish_time = int(round(time.time(), 0)+2000)
+        finish_time = int(round(time.time(), 0) + 2000)
         start_time = finish_time - randint(40000000, 50000000)
         if 'sign' in r.json():
             dec_sign = packet.decrypt_sign(r.json()['sign'])
@@ -2307,37 +2465,36 @@ def complete_clash():
             print('nah')
 
         sign = {
-            'damage' : enemy_hp,
+            'damage': enemy_hp,
             'finished_at_ms': finish_time,
-            'finished_reason':'win',
-            'is_cleared':True,
-            'remaining_hp':0,
-            'round':0,
-            'started_at_ms':start_time,
+            'finished_reason': 'win',
+            'is_cleared': True,
+            'remaining_hp': 0,
+            'round': 0,
+            'started_at_ms': start_time,
             'token': dec_sign['token']
         }
 
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
             'Accept': '*/*',
-            'Authorization': packet.mac('POST', '/rmbattles/'+str(clash_id)+'/stages/finish'),
+            'Authorization': packet.mac('POST', '/rmbattles/' + str(clash_id) + '/stages/finish'),
             'Content-type': 'application/json',
             'X-Platform': config.platform,
             'X-AssetVersion': '////',
             'X-DatabaseVersion': '////',
             'X-ClientVersion': '////',
-            }
+        }
         if config.client == 'global':
-            url = 'https://ishin-global.aktsk.com/rmbattles/'+str(clash_id)+'/stages/finish'
+            url = 'https://ishin-global.aktsk.com/rmbattles/' + str(clash_id) + '/stages/finish'
         else:
-            url = 'http://ishin-production.aktsk.jp/rmbattles/'+str(clash_id)+'/stages/finish'
-        
-        r = requests.post(url, data=json.dumps(sign), headers=headers)
-        print('Completed Stage '+Fore.YELLOW+str(stage))
+            url = 'http://ishin-production.aktsk.jp/rmbattles/' + str(clash_id) + '/stages/finish'
 
+        r = requests.post(url, data=json.dumps(sign), headers=headers)
+        print('Completed Stage ' + Fore.YELLOW + str(stage))
 
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
             'Accept': '*/*',
             'Authorization': packet.mac('GET', '/rmbattles/teams/1'),
             'X-Language': 'en',
@@ -2346,26 +2503,26 @@ def complete_clash():
             'X-AssetVersion': '////',
             'X-DatabaseVersion': '////',
             'X-ClientVersion': '////',
-            }
+        }
         if config.client == 'global':
             url = 'https://ishin-global.aktsk.com/rmbattles/teams/1'
         else:
             url = 'http://ishin-production.aktsk.jp/rmbattles/teams/1'
-        
+
         r = requests.get(url, headers=headers)
         print('----------------------------')
         if 'sortiable_user_card_ids' not in r.json():
             return 0
         available_user_cards = r.json()['sortiable_user_card_ids']
 
+
 ####################################################################
 def complete_area(area_id):
     # completes all stages and difficulties of a given area.
     # JP Translated
 
-
-    # Check if GLB database has id, if not try JP DB. 
-    if config.client == 'global':  
+    # Check if GLB database has id, if not try JP DB.
+    if config.client == 'global':
         config.Model.set_connection_resolver(config.db_glb)
         quests = config.Quests.where('area_id', '=', area_id).get()
     else:
@@ -2384,15 +2541,23 @@ def complete_area(area_id):
         difficulties = []
         for sugoroku in sugorokus:
             print('Completion of area: ' + str(i) + '/' + str(total))
-            complete_stage(str(quest.id),sugoroku.difficulty)
+            complete_stage(str(quest.id), sugoroku.difficulty)
             i += 1
+
+
 ####################################################################
 def save_account():
     if not os.path.isdir("Saves"):
-        try: 
+        try:
             os.mkdir('Saves')
-            os.mkdir('Saves/android')
             os.mkdir('Saves/ios')
+            os.mkdir('Saves/android')
+            os.mkdir('Saves/Jp')
+            os.mkdir('Saves/Jp/ios')
+            os.mkdir('Saves/Jp/android')
+            os.mkdir('Saves/fresh')
+            os.mkdir('Saves/fresh/ios')
+            os.mkdir('Saves/fresh/android')
         except:
             print(Fore.RED + Style.BRIGHT + 'Unable to create saves file')
             return 0
@@ -2401,13 +2566,13 @@ def save_account():
     while valid_save == False:
         save_name = input("What would you like to name the file?")
         while save_name.isalnum() == 0:
-            print(Fore.RED + Style.BRIGHT+"Name not allowed!")
+            print(Fore.RED + Style.BRIGHT + "Name not allowed!")
             save_name = input('What would you like to name this save?: ')
-        if os.path.exists('Saves'+os.sep+config.platform+os.sep+save_name):
+        if os.path.exists('Saves' + os.sep + config.platform + os.sep + save_name + ".txt"):
             print(Fore.RED + Style.BRIGHT + "File by that name already exists.")
         else:
             try:
-                f = open(os.path.join('Saves'+os.sep+config.platform+os.sep+save_name), 'w')
+                f = open(os.path.join('Saves' + os.sep + config.platform + os.sep + save_name + ".txt"), 'w')
                 f.write(str(config.identifier) + '\n')
                 f.write(str(config.AdId) + '\n')
                 f.write(str(config.UniqueId) + '\n')
@@ -2421,26 +2586,28 @@ def save_account():
                 break
             except Exception as e:
                 print(e)
+
+
 ####################################################################
 def load_account():
-
-    while 1==1:
-        print('Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ')', end='')
+    while 1 == 1:
+        print(
+            'Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ')',end='')
         platform = input('')
-        if platform[0].lower() in ['1','2']:
+        if platform[0].lower() in ['1', '2']:
             if platform[0].lower() == '1':
                 config.platform = 'android'
             else:
                 config.platform = 'ios'
             break
         else:
-            print(Fore.RED+'Could not identify correct operating system to use.')
+            print(Fore.RED + 'Could not identify correct operating system to use.')
 
-    while 1==1:
+    while 1 == 1:
         save_name = input("What save would you like to load?: ")
-        if os.path.isfile('Saves'+os.sep+config.platform+os.sep+save_name):
+        if os.path.isfile('Saves' + os.sep + config.platform + os.sep + save_name + ".txt"):
             try:
-                f = open(os.path.join('Saves',config.platform, save_name), 'r')
+                f = open(os.path.join('Saves', config.platform, save_name + ".txt"), 'r')
                 config.identifier = f.readline().rstrip()
                 config.AdId = f.readline().rstrip()
                 config.UniqueId = f.readline().rstrip()
@@ -2449,30 +2616,32 @@ def load_account():
                 if config.client == client:
                     break
                 else:
-                    print(Fore.RED + Style.BRIGHT+'Save does not match client version.')
+                    print(Fore.RED + Style.BRIGHT + 'Save does not match client version.')
 
             except Exception as e:
                 print(e)
-            
+
         else:
-            print(Fore.RED + Style.BRIGHT + "Could not find "+save_name)
+            print(Fore.RED + Style.BRIGHT + "Could not find " + save_name)
     refresh_client()
+
+
 ####################################################################
 
 def daily_login():
-
     # ## Accepts Outstanding Login Bonuses
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
-        'Authorization': packet.mac('GET', '/resources/home?apologies=true&banners=true&bonus_schedules=true&budokai=true&comeback_campaigns=true&gifts=true&login_bonuses=true&rmbattles=true'),
+        'Authorization': packet.mac('GET',
+                                    '/resources/home?apologies=true&banners=true&bonus_schedules=true&budokai=true&comeback_campaigns=true&gifts=true&login_bonuses=true&rmbattles=true'),
         'X-Language': 'en',
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/resources/home?apologies=true&banners=true&bonus_schedules=true&budokai=true&comeback_campaigns=true&gifts=true&login_bonuses=true&rmbattles=true'
     else:
@@ -2482,7 +2651,7 @@ def daily_login():
         print(r.json())
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('POST', '/login_bonuses/accept'),
         'Content-type': 'application/json',
@@ -2490,7 +2659,7 @@ def daily_login():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/login_bonuses/accept'
     else:
@@ -2499,28 +2668,30 @@ def daily_login():
     r = requests.post(url, headers=headers)
     if 'error' in r.json():
         print(r.json())
+
+
 ####################################################################
 def dragonballs():
     is_got = 0
     ###Check for Dragonballs
     headers = {
-                'User-Agent':'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                'Accept':'*/*',
-                'Authorization': packet.mac('GET', '/dragonball_sets'),
-                'Content-type' : 'application/json',
-                'X-Language':'en',
-                'X-Platform' : config.platform,
-                'X-AssetVersion' : '////',
-                'X-DatabaseVersion' : '////',
-                'X-ClientVersion' : '////'
-              }
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/dragonball_sets'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////'
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/dragonball_sets'
     else:
         url = 'http://ishin-production.aktsk.jp/dragonball_sets'
-    r = requests.get(url, headers = headers)
+    r = requests.get(url, headers=headers)
     if 'error' in r.json():
-        print(Fore.RED + Style.BRIGHT+str(r.json()))
+        print(Fore.RED + Style.BRIGHT + str(r.json()))
         return 0
 
     ####Determine which dragonball set is being used
@@ -2533,29 +2704,29 @@ def dragonballs():
                 is_got += 1
             elif db['is_got'] == False:
                 is_got += 1
-                complete_stage(str(db['quest_id']),db['difficulties'][0])
+                complete_stage(str(db['quest_id']), db['difficulties'][0])
 
     ### If all dragonballs found then wish
     if is_got == 7:
         headers = {
-                    'User-Agent':'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                    'Accept':'*/*',
-                    'Authorization': packet.mac('GET', '/dragonball_sets/'+str(set)+'/wishes'),
-                    'Content-type' : 'application/json',
-                    'X-Language':'en',
-                    'X-Platform' : config.platform,
-                    'X-AssetVersion' : '////',
-                    'X-DatabaseVersion' : '////',
-                    'X-ClientVersion' : '////'
-                  }
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'Accept': '*/*',
+            'Authorization': packet.mac('GET', '/dragonball_sets/' + str(set) + '/wishes'),
+            'Content-type': 'application/json',
+            'X-Language': 'en',
+            'X-Platform': config.platform,
+            'X-AssetVersion': '////',
+            'X-DatabaseVersion': '////',
+            'X-ClientVersion': '////'
+        }
         if config.client == 'global':
-            url = 'https://ishin-global.aktsk.com/dragonball_sets/'+str(set)+'/wishes'
+            url = 'https://ishin-global.aktsk.com/dragonball_sets/' + str(set) + '/wishes'
         else:
-            url = 'http://ishin-production.aktsk.jp/dragonball_sets/'+str(set)+'/wishes'
+            url = 'http://ishin-production.aktsk.jp/dragonball_sets/' + str(set) + '/wishes'
 
-        r = requests.get(url, headers = headers)
+        r = requests.get(url, headers=headers)
         if 'error' in r.json():
-            print(Fore.RED + Style.BRIGHT+str(r.json()))
+            print(Fore.RED + Style.BRIGHT + str(r.json()))
             return 0
         wish_ids = []
         for wish in r.json()['dragonball_wishes']:
@@ -2567,40 +2738,41 @@ def dragonballs():
                 print(wish['description'])
                 print('')
 
-        print(Fore.YELLOW+'What wish would you like to ask shenron for? ID: ', end='')
+        print(Fore.YELLOW + 'What wish would you like to ask shenron for? ID: ', end='')
         choice = input()
         while choice not in wish_ids:
-            print("Shenron did not understand you! ID: ",end='')
+            print("Shenron did not understand you! ID: ", end='')
             choice = input()
         wish_ids[:] = []
         headers = {
-                'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                'Accept': '*/*',
-                'Authorization': packet.mac('POST', '/dragonball_sets/'+str(set)+'/wishes'),
-                'Content-type': 'application/json',
-                'X-Platform': config.platform,
-                'X-AssetVersion': '////',
-                'X-DatabaseVersion': '////',
-                'X-ClientVersion': '////',
-                }
+            'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+            'Accept': '*/*',
+            'Authorization': packet.mac('POST', '/dragonball_sets/' + str(set) + '/wishes'),
+            'Content-type': 'application/json',
+            'X-Platform': config.platform,
+            'X-AssetVersion': '////',
+            'X-DatabaseVersion': '////',
+            'X-ClientVersion': '////',
+        }
         if config.client == 'global':
-            url = 'https://ishin-global.aktsk.com/dragonball_sets/'+str(set)+'/wishes'
+            url = 'https://ishin-global.aktsk.com/dragonball_sets/' + str(set) + '/wishes'
         else:
-            url = 'http://ishin-production.aktsk.jp/dragonball_sets/'+str(set)+'/wishes'
+            url = 'http://ishin-production.aktsk.jp/dragonball_sets/' + str(set) + '/wishes'
         data = {'dragonball_wish_ids': [int(choice)]}
         r = requests.post(url, data=json.dumps(data), headers=headers)
         if 'error' in r.json():
-            print(Fore.RED + Style.BRIGHT+str(r.json()))
+            print(Fore.RED + Style.BRIGHT + str(r.json()))
         else:
-            print(Fore.YELLOW+'Wish granted!')
+            print(Fore.YELLOW + 'Wish granted!')
             print('')
 
         dragonballs()
 
         return 0
+
+
 ####################################################################
 def transfer_account():
-
     # Determine correct platform to use
     set_platform()
 
@@ -2609,27 +2781,27 @@ def transfer_account():
     config.AdId = packet.guid()['AdId']
     config.UniqueId = packet.guid()['UniqueId']
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     data = {'eternal': True, 'old_user_id': '', 'user_account': {
         'device': 'samsung',
-        'device_model': 'SM-E7000',
-        'os_version': '7.0',
+        'device_model': 'SM-G930V',
+        'os_version': '6.0',
         'platform': config.platform,
         'unique_id': config.UniqueId,
-        }}
+    }}
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/auth/link_codes/' \
-        + str(transfercode)
+              + str(transfercode)
     else:
         url = 'http://ishin-production.aktsk.jp/auth/link_codes/' \
-        + str(transfercode)
+              + str(transfercode)
     print('URL: ' + url)
     r = requests.put(url, data=json.dumps(data), headers=headers)
     if 'error' in r.json():
@@ -2639,66 +2811,102 @@ def transfer_account():
 
     save_account()
     refresh_client()
+
+
 ####################################################################
 def user_command_executor(command):
     if ',' in command:
-            command = command.replace(" ", "")
-            command = command.replace(",", "\n")
-            s = io.StringIO(command+'\n')
-            sys.stdin = s
-            command = input()
+        command = command.replace(" ", "")
+        command = command.replace(",", "\n")
+        s = io.StringIO(command + '\n')
+        sys.stdin = s
+        command = input()
 
     if command == 'help':
-        if os.path.exists('help.txt'):
-            f = open(os.path.join('help.txt'), 'r')
-            help_text = f.read()
-            print(help_text)
-        else:
-            print(Fore.RED + Style.BRIGHT+'help.txt does not exist.')
+        print('---------------------------------')
+        print(' ')
+        print(Style.BRIGHT + Fore.YELLOW + '\'stage\'' + Style.RESET_ALL + ' | Completes stage given ID or name.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'gt\'' + Style.RESET_ALL + ' | Gt DragonBalls.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'area\'' + Style.RESET_ALL + ' | Complete all stages and difficulties in an area.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'cards\'' + Style.RESET_ALL + ' | Provides a GUI to view card information.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'completequests\'' + Style.RESET_ALL + ' | Completes all unfinished quest stages.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'completeevents\'' + Style.RESET_ALL + ' | Completes all unfinished event stages.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'dokkan\'' + Style.RESET_ALL + ' | Completes all event stages, regardless of being finished beforehand.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'potara\'' + Style.RESET_ALL + ' | Provides a series of prompts to collect Potara medals.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'bossrush\'' + Style.RESET_ALL + ' | Completes all bossrush stages.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'hercule\'' + Style.RESET_ALL + ' | Completes all Hercule Punch Machine stages.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'completezbattles\'' + Style.RESET_ALL + ' | Completes all unfinished zbattles to stage 30.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'zstages\'' + Style.RESET_ALL + ' | Provides a GUI to complete single Z-Battle stages.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'clash\'' + Style.RESET_ALL + ' | Complete ultimate clash if you have enough UR cards.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'listevents\'' + Style.RESET_ALL + ' | Prints a list of all currently available events.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'summon\'' + Style.RESET_ALL + ' | Provides a GUI to choose what banner to summon.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'listsummons\'' + Style.RESET_ALL + ' | Prints a list of all currently available summons.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'dragonballs\'' + Style.RESET_ALL + ' | Collects Dragonballs and makes wishes.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'omegafarm\'' + Style.RESET_ALL + ' | Completes everything (story, events, zbattle)')
+        print(Style.BRIGHT + Fore.YELLOW + '\'info\'' + Style.RESET_ALL + ' | Print out account information.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'items\'' + Style.RESET_ALL + ' | Provides a GUI to view user items.')
+        print(
+                    Style.BRIGHT + Fore.YELLOW + '\'medals\'' + Style.RESET_ALL + ' | Provides a GUI to view and sell medals.')
+        print(
+                Style.BRIGHT + Fore.YELLOW + '\'sbr or nbsr\'' + Style.RESET_ALL + ' | sbr)')
+        print(
+                Style.BRIGHT + Fore.YELLOW + '\'rankup\'' + Style.RESET_ALL + ' | Levels character)')
+        print(Style.BRIGHT + Fore.YELLOW + '\'sell\'' + Style.RESET_ALL + ' | Provides a GUI to sell cards.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'team\'' + Style.RESET_ALL + ' | Change composition of a deck.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'supporter\'' + Style.RESET_ALL + ' | Change your support unit.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'deck\'' + Style.RESET_ALL + ' | Select a deck to be the default.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'gift\'' + Style.RESET_ALL + ' | Accepts gifts and missions.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'transfer\'' + Style.RESET_ALL + ' | Generates User ID and Transfer Code.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'capacity\'' + Style.RESET_ALL + ' | Increase card capacity by +5.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'name\'' + Style.RESET_ALL + ' | Change account name.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'key\'' + Style.RESET_ALL + ' | Kagi stages.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'Farm\'' + Style.RESET_ALL + ' | LR medals.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'fu\'' + Style.RESET_ALL + ' | 40 ur medals.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'TF\'' + Style.RESET_ALL + ' | Treasure Farm.')
+        print(Style.BRIGHT + Fore.YELLOW + '\'refresh\'' + Style.RESET_ALL + ' | Reauthenticates the client.')
+    elif command == 'TF':
+        TF()
+    elif command == 'tf':
+    	TF()
     elif command == 'stage':
         stage = input('What stage would you like to complete?: ')
         difficulty = input('Enter the difficulty|(0:Easy, 1:Hard etc...): ')
         loop = input('Enter how many times to execute: ')
         for i in range(int(loop)):
-            complete_stage(stage,difficulty)
+            complete_stage(stage, difficulty)
     elif command == 'area':
         area = input('Enter the area to complete: ')
-        loop  = input('How many times to complete the entire area: ')
+        loop = input('How many times to complete the entire area: ')
         for i in range(int(loop)):
             complete_area(area)
     elif command == 'gift':
         accept_gifts()
         accept_missions()
-    elif command == 'potara':
-        potara()
-    elif command == 'medalcal': ##Source: https://github.com/mvxindra/Open-Source-Battle-Bot
-        medal_calculator()
-    elif command == 'ezaplus':
-        complete_unfinished_zbattles_plus()
-    elif command == 'rankup':
-        rank_up()
-    elif command == 'lrpan':
-        lr_pan()
- #   elif command == 'sbr':
- #       superbattleroad()
-    elif command == 'bossrush':
-        bossrush()
     elif command == 'omegafarm':
-        print('This will do all daily, potential, unfinished stages, events, zbattles and clash...')
-        complete_stage('130001', 0)
-        complete_stage('131001', 0)
-        complete_stage('132001', 0)
-        complete_potential()
-        refresh_client()
-        accept_gifts()
-        accept_missions()
         complete_unfinished_quest_stages()
+        refresh_client()
         complete_unfinished_events()
         complete_unfinished_zbattles()
         complete_clash()
-        punch_machine()
+        accept_gifts()
+        accept_missions()
         refresh_client()
-        get_user_info()
+    ## When this will get updated, we shall add :finishzbattle,30, + sell + sellhercule + baba(?)
     elif command == 'completequests':
         complete_unfinished_quest_stages()
     elif command == 'completeevents':
@@ -2718,10 +2926,8 @@ def user_command_executor(command):
         accept_missions()
     elif command == 'listevents':
         list_events()
-    elif command == 'chooseevents':
-        event_viewer()
     elif command == 'summon':
-        summon()   
+        summon()
     elif command == 'listsummons':
         list_summons()
     elif command == 'dragonballs':
@@ -2732,22 +2938,23 @@ def user_command_executor(command):
         items_viewer()
     elif command == 'medals':
         sell_medals()
-    elif command == 'punchmachine':
-        punch_machine()
     elif command == 'sell':
         sell_cards__bulk_GUI()
     elif command == 'cards':
         list_cards()
     elif command == 'supporter':
-        change_supporter() 
+        change_supporter()
     elif command == 'team':
         change_team()
+    elif command == 'farm':
+        lr_farm()
+    elif command == 'fu':
+        ur_farm()
     elif command == 'deck':
         config.deck = int(input('Enter a deck number to use: '))
     elif command == 'transfer':
-        get_transfer_code()
+        new_transfer()
     elif command == 'capacity':
-        ### Checking if the input is valid
         valid = False
         while not valid:
             try:
@@ -2755,1389 +2962,69 @@ def user_command_executor(command):
                 valid = True
             except ValueError:
                 print("That's not a valid number.")
-        ### Checking if you have enough Dragon Stones
+        # Checking if you have enough Dragon Stones
         if increase_times > get_user()['user']['stone']:
             print("You don't have enough Dragon Stones.")
             pass
-        ### Increasing the capacity
+        # Increasing the capacity
         else:
             for _ in range(increase_times):
                 increase_capacity()
+        increase_capacity()
     elif command == 'name':
         change_name()
+    elif command == 'dokkan':
+            dokkan()
+    elif command == 'supporter':
+        change_supporter()
+    elif command == 'sbr':
+        complete_sbr()
+    elif command == 'bossrush':
+        complete_stage('701001', 3)
+        complete_stage('701001', 4)
+        complete_stage('701002', 4)
+        complete_stage('701002', 5)
+        complete_stage('701003', 5)
+        complete_stage('701004', 5)
+        complete_stage('701005', 5)
+        complete_stage('701006', 5)
+        complete_stage('701007', 5)
+        complete_stage('701008', 5)
+        if config.client == "japan":
+            complete_stage('701007', 5)
+            complete_stage('701008', 5)
+        accept_missions()
+    elif command == 'potara':
+        potara()
+    elif command == 'hercule':
+        complete_stage('711001', 1)
+        complete_stage('711002', 1)
+        complete_stage('711003', 1)
+        complete_stage('711004', 1)
+        complete_stage('711005', 1)
+        complete_stage('711006', 1)
+        complete_potential()
+        accept_gifts()
+        accept_missions()
+    elif command == 'rankup':
+        rankup()
+    elif command == 'gt':
+        Gt()
+    elif command == 'key':
+        get_kagi()
+    elif command == 'limit':
+        limit_stage()
     elif command == 'refresh':
         refresh_client()
     else:
         print('Command not found.')
-####################################################################
-#Oh, it's work in progress!
-
-
-def superbattleroad():
-    print("This will do all of Super Battle Road.")
-    print("Wait for it...")
-#Zeni Stage 711001 Difficulties: [1] AreaID: 711
-#Potential Orb Stage 711002 Difficulties: [1] AreaID: 711
-#Dragon Stone Stage 711003 Difficulties: [1] AreaID: 711
-#Zeni Stage 711004 Difficulties: [1] AreaID: 711
-#Potential Orb Stage 711005 Difficulties: [1] AreaID: 711
-#Dragon Stone Stage 711006 Difficulties: [1] AreaID: 711
-    complete_stage('711001', 1)
-    complete_stage('711002', 1)
-    complete_stage('711003', 1)
-    complete_stage('711004', 1)
-    complete_stage('711005', 1)
-    complete_stage('711006', 1)
-    print("It is done.")
 
 
 ####################################################################
-
-
-
-def punch_machine():
-    print("This will do all of Hercule Punch levels.")
-    print("Wait for it...")
-#Zeni Stage 711001 Difficulties: [1] AreaID: 711
-#Potential Orb Stage 711002 Difficulties: [1] AreaID: 711
-#Dragon Stone Stage 711003 Difficulties: [1] AreaID: 711
-#Zeni Stage 711004 Difficulties: [1] AreaID: 711
-#Potential Orb Stage 711005 Difficulties: [1] AreaID: 711
-#Dragon Stone Stage 711006 Difficulties: [1] AreaID: 711
-    complete_stage('711001', 1)
-    complete_stage('711002', 1)
-    complete_stage('711003', 1)
-    complete_stage('711004', 1)
-    complete_stage('711005', 1)
-    complete_stage('711006', 1)
-    print("It is done.")
-####################################################################
-def medal_calculator():
-    # ## Pre Lr Accounts
-
-    print("1. Lr Goku")
-    print("2. Lr Frieza")
-    print("3. Lr Andriods")
-    print("4. Lr Vegito (WIP)")
-    print("5. Summonable Lr ")
-
-
-    # Lrgoku medals drop as 50% for 7, 20% for 5 or 10, 5% for 15 or 20
-    # Lrfrieza drop is same as goku
-    Select1 = input("Select 1 2 3 4 5   here:")
-    if Select1 == "1":
-        print("-----------------------------------")
-        To = "-"
-        Lrgselect1 = input("Is your Goku SSR, UR, or TUR?:")
-        if Lrgselect1 == "SSR":
-            print("Z-awaken Goku with 50 Gregory, 20 popo, 10 Babidi, 3 North kai, and 1 supreme kai.")
-        if Lrgselect1 == "UR":
-            LRgurhave = input("How many medals do you have?:")
-            LRgurneed = (15 - int(LRgurhave))
-            LRgurstam = (LRgurneed * 25)
-            print("Goku medals needed:", LRgurneed)
-            print("Stamina needed:", LRgurstam)
-            stage = input('What stage would you like to complete(The Real Battle 601002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(15): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-        if Lrgselect1 == "TUR":
-            Lrgselect = input("How many medals do you have?:")
-            Needlrg = 777 - int(Lrgselect)
-            Lrgclearmax = int(Needlrg) / 5
-            Lrgclearmin = int(Needlrg) / 20
-            Lrgstammax = int(Lrgclearmax) * 50
-            Lrgstammin = int(Lrgclearmin) * 50
-            print("Medals needed:", Needlrg)
-            print("Clears needed:", Lrgclearmin, To, Lrgclearmax)
-            print("Stamina needed:", Lrgstammin, To, Lrgstammax)
-            stage = input('What stage would you like to complete(Transcended Warrior 601003) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute: ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-
-    if Select1 == "2":
-        print("-----------------------------------")
-        To = "-"
-        Lrfselect1 = input("Is your Frieza SSR, UR, Or TUR?:")
-        if Lrfselect1 == "SSR":
-            print("Z-awaken Frieza with 50 Gregory, 20 Roshi, 10 Bibidi, 3 South kai, 1 Elder kai.")
-        if Lrfselect1 == "UR":
-            LRfurhave = input("How many frieza medals do you need?:")
-            LRfurneed = (15 - int(LRfurhave))
-            LRfurstam = (LRfurneed * 25)
-            print("Freiza medals needed:", LRfurneed)
-            print("Stamina needed", LRfurstam)
-            print("Medals needed:", Needlrg)
-            print("Clears needed:", Lrgclearmin, To, Lrgclearmax)
-            print("Stamina needed:", Lrgstammin, To, Lrgstammax)
-            stage = input('What stage would you like to complete(True Fear 602002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-hard): ')
-            loop = input('Enter how many times to execute(15): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-        if Lrfselect1 == "TUR":
-            Lrfselect = input("How many medals do you have?:")
-            Needlrf = 777 - int(Lrfselect)
-            Lrfclearmin = int(Needlrf) / 20
-            lrfclearmax = int(Needlrf) / 5
-            lrfstammin = int(Lrfclearmin) * 50
-            lrfstammax = int(lrfclearmax) * 50
-            print("Medals needed:", Needlrf)
-            print("Clears needed", Lrfclearmin, To, lrfclearmax)
-            print("Stamina needed", lrfstammin, To, lrfstammax)
-            stage = input('What stage would you like to complete(Summit of the Universe 602003) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(110): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-
-    if Select1 == "3":
-        print("-----------------------------------")
-        To = "-"
-        LrlevelA = input("Are you READY TO LR andriods  Lr?:")
-        if LrlevelA == "Lr":
-            LrhaveGT = input("How many Gotenks medals do you have?:")
-            LrhaveV = input("How many Super Vegito medals do you have?:")
-            Lrhavebkk = input("How many Blue Kaioken Medals do you have?:")
-            LrhaveBh = input("How many buuhan medals do you have?:")
-            Lrhavegf = input("How many Golden Frieza medals do you have?:")
-            LrhaveBroly = input("How many Broly medals do you have?:")
-            LrhaveCell = input("How many Cell medals do you have?:")
-            LrhaveKidbuu = input("How many Kid Buu medals do you have?:")
-            LrhaveSSJ3G = input("How many SSJ3 Goku medals do you have?:")
-            Lrhavegogeta = input("How many Gogeta medals do you have?:")
-            LrhaveJ = input("How many Janemba medals do you have?:")
-            LrhaveEE = input("How many Evil Emperor medals do you have?:")
-            LrhaveGh = input("How many Gohan medals do you have?:")
-            Lrhavessj3v = input("How many SSJ3 Vegeta medals do you have?:")
-            Lrhavebeerus = input("How many Beerus medals do you have?:")
-            LrneedGT = 77 - int(LrhaveGT)
-            LrneedV = 77 - int(LrhaveV)
-            Lrneedbkk = 77 - int(Lrhavebkk)
-            Lrneedbh = 77 - int(LrhaveBh)
-            Lrneedgf = 77 - int(Lrhavegf)
-            LrneedJ = 7 - int(LrhaveJ)
-            LrneedEE = 7 - int(LrhaveEE)
-            LrneedGh = 7 - int(LrhaveGh)
-            Lrneedssj3v = 7 - int(Lrhavessj3v)
-            Lrneedbeerus = 7 - int(Lrhavebeerus)
-            LrneedSSJ3G = 3 - int(LrhaveSSJ3G)
-            LrneedBroly = 3 - int(LrhaveBroly)
-            LrneedCell = 3 - int(LrhaveCell)
-            LrneedKidBuu = 3 - int(LrhaveKidbuu)
-            LrneedGogeta = 3 - int(Lrhavegogeta)
-
-            Lramedalstotal = (LrneedGT + Lrneedgf + LrneedV + Lrneedbh + Lrneedbkk + Lrneedbeerus + Lrneedssj3v + LrneedGh + LrneedEE + LrneedJ + LrneedGogeta + LrneedBroly + LrneedCell + LrneedSSJ3G + LrneedKidBuu)
-            Lrastam = int(Lramedalstotal * 50)
-            print("-----------------------------------")
-            print("Gotenks medals needed:", LrneedGT)
-            print("Super Vegito medals needed:", LrneedV)
-            print("Blue Kaiken medals needed:", Lrneedbkk)
-            print("Buuhan medals needed:", Lrneedbh)
-            print("Golden Frieza medals needed:", Lrneedgf)
-            print("Janemba medals needed:", LrneedJ)
-            print("Evil Emperor medals needed:", LrneedEE)
-            print("Gohan medals needed:", LrneedGh)
-            print("SSJ3 Vegeta medals needed:", Lrneedssj3v)
-            print("Beerus medals needed:", Lrneedbeerus)
-            print("Broly medals needed:", LrneedBroly)
-            print("Cell medals needed:", LrneedCell)
-            print("Kid Buu medals needed:", LrneedKidBuu)
-            print("SSJ3 Goku medals needed:", LrneedSSJ3G)
-            print("Gogeta medals needed:", LrneedGogeta)
-            print("Stamina needed:", Lrastam)
-            stage = input('What stage would you like to complete(Meet Vegito 512002) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(11): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(Super Gotenks 513002) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(11): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(Ceaseless Combat 514001) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(11): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(Horrendous Majins Onslaught 515002) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(11): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(Emperors Obsession 516001) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(11): ')
-            for i in range(int(loop)):
-                            complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(Overwhelming Force of Evil! 506003) : ')
-            difficulty = input('Enter the difficulty|(4:Super2): ')
-            loop = input('Enter how many times to execute(1): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(Full-Power Final Battle 507002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(7): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(The Ultimate Form 508003) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(1): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(The Most Powerful Blow 510002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(7): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(God of Destruction Wrath 511002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(7): ')
-            for i in range(int(loop)):
-                    complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(The Demon Returns 501001) : ')
-            difficulty = input('Enter the difficulty|(3:Super): ')
-            loop = input('Enter how many times to execute(1): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(The Extreme Terror 502002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(2): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(Regression to Evil 503003) : ')
-            difficulty = input('Enter the difficulty|(4:Super2): ')
-            loop = input('Enter how many times to execute(1): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            stage = input('What stage would you like to complete(Ultimate Finishing Move 504002) : ')
-            difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-            loop = input('Enter how many times to execute(2): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-            "BREAK"
-            stage = input('What stage would you like to complete(Fusion Reborn! 505003) : ')
-            difficulty = input('Enter the difficulty|(4:Super2): ')
-            loop = input('Enter how many times to execute(1): ')
-            for i in range(int(loop)):
-                complete_stage(stage, difficulty)
-
-    if Select1 == "4":
-        LrlevelVB = input("Is your Vegito SSR, UR, or TUR?:")
-        if LrlevelVB == "UR":
-            LRVBURhave = input("How many potara medals do you have?:")
-            LRVBURneed = 30 - int(LRVBURhave)
-            print("Potara medals needed:", LRVBURneed)
-        if LrlevelVB == "TUR":
-            LRVBTURhave = input("How many Potara medals do you have?:")
-            LRVBTURneed = 70 - int(LRVBTURhave)
-            print("Potara medals needed:", LRVBTURneed)
-    if Select1 == "5":
-        LrTrunkRarity = input(" Lr?:")
-        if LrTrunkRarity == "Lr":
-            To = "-"
-            LrTrunksURhave = input("How many Warrior's mark trunks medals do you have?:")
-            LRtcold = input("How many King cold medals do you have?:")
-            LRtMF = input("How many Mecha Freiza medals do you have?:")
-            LRtc = input("How many Chilled medals do you have?:")
-            Lrtt = input("How many Teen Trunks medals do you have?:")
-            Lrtx = input("How many Xeno Trunks medals do you have?:")
-            LrTrunksURneed = 7 - int(LrTrunksURhave)
-            stamneedmin = 22 * int(LrTrunksURneed)
-            stamneedmax = 22 * int(LrTrunksURneed)
-            LRcoldneed = 10 - int(LRtcold)
-            LRtcneed = 10 - int(LRtc)
-            Lrtxneed = 10 - int(Lrtx)
-            Lrttneed = 10 - int(Lrtt)
-            LRtMFneed = 10 - int(LRtMF)
-            Lrttotalmedals = (LRcoldneed + LRtcneed + LRtMFneed + Lrttneed + Lrtxneed)
-            LRtotalmedalss = (Lrttotalmedals / 2)
-            LRtstam = (25 * LRtotalmedalss)
-            print("-----------------------------------")
-            print("Trunks medals needed:", LrTrunksURneed)
-            print("King Cold medals needed:", LRtcneed)
-            print("Chilled medals needed", LRtcneed)
-            print("Xeno Trunks medals needed:", Lrtxneed)
-            print("Teen Trunks medals needed:", Lrttneed)
-            print("Mecha Freiza medals needed:", LRtMFneed)
-            print("Stamina needed:", stamneedmin, To, stamneedmax)
-    print("5. Lr Trunks")       
-    stage = input('What stage would you like to complete(Proud Bloodline 320022) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(11): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Raging Counterstrike 406003) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-            complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Dignity of a Clan 408002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(The Strongest Space Pirate 420002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Warrior of Hope 414002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(The Time Patrol Warrior 422002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Majin Vegeta")
-    stage = input('What stage would you like to complete(The Dark Prince Returns 319022) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(15): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(The Strongest Shadow Dragon 517002) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Dark Nightmare 518002) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Fusion in Blue 519001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Rose-Tinted Plot 520001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(A New Hope 522001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print(" Lr Super Saiyan Goku & Super Saiyan Vegeta")
-    stage = input('What stage would you like to complete(The Ultimate Pair of the Present World 537001) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(11): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Ultimate Splendor 512003) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Super Saiyan Broly(teq)")
-    stage = input('What stage would you like to complete(The Demon Returns 501003) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( Go Warriors of the New Generation 552001) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Blast Family Kamehameha 326006) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(20): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("Lr Full Power Boujack (Galactic Warrior)")
-    stage = input('What stage would you like to complete( Extreme Peril 306008) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(25): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Cell (Perfect Form) & Cell Jr")
-    stage = input('What stage would you like to complete(Waking Nightmare 502003) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("Lr Trunks (Teen) (Future) & Mai (Future)")
-    stage = input('What stage would you like to complete( The Zero Mortals Plan 328006) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(20): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Dark Nightmare 518002) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(1): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( Rose-Tinted Plot 520001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(1): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Fusion in Blue 519001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(1): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( The Epic Battle Begins 524001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(1): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(A New Hope 522001) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(2): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( Last Judgment...Or Last Hope 523002) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(2): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Searing Rose-Colored Fury 520002) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(2): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( Sublime Blue! 519002) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(2): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Beerus & Whis")
-    stage = input('What stage would you like to complete(God of Destruction Wrath 511002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Destruction God Awakens 314001) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(4): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(In Search of the Super Saiyan God 314002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Vegeta Pride 314007) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(4): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Super Saiyan Gohan (Teen) & Super Saiyan Goten (Kid)")
-    stage = input('What stage would you like to complete(Go! Warriors of the New Generation 552001) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(10): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Blast! Family Kamehameha! 326006) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(20): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Super Saiyan Goku (Angel) & Super Saiyan Vegeta (Angel)")
-    stage = input('What stage would you like to complete(The Ultimate Pair of the Otherworld 536001) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(10): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Fusion Reborn! 326006) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(7): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Trunks (Kid) & Goten (Kid)")
-    stage = input('What stage would you like to complete(An Unexpectedly Powerful Man! 411002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Super Gotenks! 513002) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(One Powerful Super Fusion! 513003) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("18. Lr Super Saiyan 2 Gohan")
-    stage = input('What stage would you like to complete(Waking Nightmare 502003) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(11): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("19. Lr Super Saiyan 3 Goku")
-    stage = input('What stage would you like to complete(Super Saiyan Goku 403002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Phantom Majin Resurrected! 535002) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Mighty Warrior: 24-Hour Revival 528001) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(Ultimate Finishing Move 504002) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(4): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    print("Lr Bardock")
-    stage = input('What stage would you like to complete(Saiyans from Planet Vegeta 347001) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(10): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( 534001 The Unknown Battle) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(347007 A Lone Warriors Last Battle) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( 602002 True Fear) : ')
-    difficulty = input('Enter the difficulty|(2:Z-Hard): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(602003 Summit of the Universe) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("21. Lr Goku Black (Super Saiyan Rosé) & Zamasu")
-    stage = input('What stage would you like to complete( 518002 Dark Nightmare) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(11): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(519001 Fusion in Blue) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete( 520001 Rose-Tinted Plot) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(522001 A New Hope) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(  523002 Last Judgment...Or Last Hope) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(524001 The Epic Battle Begins) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(3): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("Lr Goku & Frieza (Final Form) (Angel)")
-    stage = input('What stage would you like to complete( 544001 Ever-Evolving Power) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(Ever-Evolving Evil) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    stage = input('What stage would you like to complete(538001 Kaboom! Ultra Instinct) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    "BREAK"
-    stage = input('What stage would you like to complete(533002 The True Golden Frieza) : ')
-    difficulty = input('Enter the difficulty|(4:Super2): ')
-    loop = input('Enter how many times to execute(5): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-    print("23. Lr Legendary Super Saiyan Broly")
-    stage = input('What stage would you like to complete(501003 The Demon Returns) : ')
-    difficulty = input('Enter the difficulty|(3:Super): ')
-    loop = input('Enter how many times to execute(11): ')
-    for i in range(int(loop)):
-        complete_stage(stage, difficulty)
-        return 0
-
-
-
-####################################################################
-def complete_unfinished_zbattles(kagi = False):
+def complete_unfinished_zbattles(kagi=False):
     # JP Translated
     headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-            'Accept': '*/*',
-            'Authorization': packet.mac('GET', '/events'),
-            'Content-type': 'application/json',
-            'X-Language': 'en',
-            'X-Platform': config.platform,
-            'X-AssetVersion': '////',
-            'X-DatabaseVersion': '////',
-            'X-ClientVersion': '////',
-            }
-    if config.client == 'global':
-        url = 'https://ishin-global.aktsk.com/events'
-    else:
-        url = 'http://ishin-production.aktsk.jp/events'
-    r = requests.get(url, headers=headers)
-    events = r.json()
-    try:
-        for event in events['z_battle_stages']:
-            try:
-                config.Model.set_connection_resolver(config.db_glb)
-                x = config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name
-            except:
-                config.Model.set_connection_resolver(config.db_jp)
-            print(config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name,end='')
-            print(Fore.CYAN + Style.BRIGHT+' | ID: ' + str(event['id']))
-
-            # Get current zbattle level
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                'Accept': '*/*',
-                'Authorization': packet.mac('GET', '/user_areas'),
-                'Content-type': 'application/json',
-                'X-Language': 'en',
-                'X-Platform': config.platform,
-                'X-AssetVersion': '////',
-                'X-DatabaseVersion': '////',
-                'X-ClientVersion': '////',
-                }
-            if config.client == 'global':
-                url = 'https://ishin-global.aktsk.com/user_areas'
-            else:
-                url = 'http://ishin-production.aktsk.jp/user_areas'
-            r = requests.get(url, headers=headers)
-            if 'user_z_battles' in r.json():
-                zbattles = r.json()['user_z_battles']
-                if zbattles == []:
-                    zbattles = 0
-            else:
-                zbattles = 0
-
-            level = 1
-            for zbattle in zbattles:
-                if int(zbattle['z_battle_stage_id']) == int(event['id']):
-                    level = zbattle['max_clear_level'] + 1
-                    print('Current EZA Level: ' + str(level))
-            
-
-
-            # Stop at level 30 !! This may not work for all zbattle e.g kid gohan
-            while level < 31:
-                ##Get supporters
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('GET', '/z_battles/'+str(event['id'])+'/supporters'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/supporters'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/supporters'   
-                r = requests.get(url, headers=headers)
-                if 'supporters' in r.json():
-                    supporter = r.json()['supporters'][0]['id']
-                elif 'error' in r.json():
-                    print(Fore.RED + Style.BRIGHT+r.json())
-                    return 0
-                else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
-                    print(r.raw())
-                    return 0
-
-                ###Send first request
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(event['id'])+'/start'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-
-
-                if kagi == True:
-                    sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': level,
-                            'selected_team_num': config.deck,
-                            'eventkagi_item_id': 5
-                            })
-                else:
-                    sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': level,
-                            'selected_team_num': config.deck,
-                            })
-
-                enc_sign = packet.encrypt_sign(sign)
-                data = {'sign': enc_sign}
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/start'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/start'
-                r = requests.post(url, data=json.dumps(data), headers=headers)
-
-                if 'sign' in r.json():
-                    dec_sign = packet.decrypt_sign(r.json()['sign'])
-                # Check if error was due to lack of stamina
-                elif 'error' in r.json():
-                    if r.json()['error']['code'] == 'act_is_not_enough':
-                        # Check if allowed to refill stamina
-                        if config.allow_stamina_refill == True:
-                            refill_stamina()
-                            r = requests.post(url, data=json.dumps(data),
-                                    headers=headers)
-                    else:  
-                        print(r.json())
-                        return 0
-                else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
-                    print(r.raw())
-                    return 0
-
-                finish_time = int(round(time.time(), 0)+2000)
-                start_time = finish_time - randint(6200000, 8200000)
-
-                data = {
-                    'elapsed_time': finish_time - start_time,
-                    'is_cleared': True,
-                    'level': level,
-                    's': 'rGAX18h84InCwFGbd/4zr1FvDNKfmo/TJ02pd6onclk=',
-                    't': 'eyJzdW1tYXJ5Ijp7ImVuZW15X2F0dGFjayI6MTAwMzg2LCJlbmVteV9hdHRhY2tfY291bnQiOjUsImVuZW15X2hlYWxfY291bnRzIjpbMF0sImVuZW15X2hlYWxzIjpbMF0sImVuZW15X21heF9hdHRhY2siOjEwMDAwMCwiZW5lbXlfbWluX2F0dGFjayI6NTAwMDAsInBsYXllcl9hdHRhY2tfY291bnRzIjpbMTBdLCJwbGF5ZXJfYXR0YWNrcyI6WzMwNjYwNTJdLCJwbGF5ZXJfaGVhbCI6MCwicGxheWVyX2hlYWxfY291bnQiOjAsInBsYXllcl9tYXhfYXR0YWNrcyI6WzEyMzY4NTBdLCJwbGF5ZXJfbWluX2F0dGFja3MiOls0NzcxOThdLCJ0eXBlIjoic3VtbWFyeSJ9fQ==',
-                    'token': dec_sign['token'],
-                    'used_items': [],
-                    'z_battle_finished_at_ms': finish_time,
-                    'z_battle_started_at_ms': start_time,
-                    }
-                #enc_sign = encrypt_sign(sign)
-
-                headers = {
-                    'User-Agent': 'Android',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(event['id'])+'/finish'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/finish'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/finish'   
-                
-                r = requests.post(url, data=json.dumps(data), headers=headers)
-                dec_sign = packet.decrypt_sign(r.json()['sign'])
-                # ## Print out Items from Database
-                print('Level: '+str(level))
-                # ## Print out Items from Database
-                if 'items' in dec_sign:
-                    supportitems = []
-                    awakeningitems = []
-                    trainingitems = []
-                    potentialitems = []
-                    treasureitems = []
-                    carditems = []
-                    trainingfields = []
-                    stones = 0
-                    supportitemsset = set()
-                    awakeningitemsset = set()
-                    trainingitemsset = set()
-                    potentialitemsset = set()
-                    treasureitemsset = set()
-                    carditemsset = set()
-                    trainingfieldsset = set()
-                    print('Items:')
-                    print('-------------------------')
-                    if 'quest_clear_rewards' in dec_sign:
-                        for x in dec_sign['quest_clear_rewards']:
-                            if x['item_type'] == 'Point::Stone':
-                                stones += x['amount']
-                    for x in dec_sign['items']:
-                        if x['item_type'] == 'SupportItem':
-
-                            # print('' + SupportItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                supportitems.append(x['item_id'])
-                            supportitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'PotentialItem':
-
-                            # print('' + PotentialItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                potentialitems.append(x['item_id'])
-                            potentialitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'TrainingItem':
-
-                            # print('' + TrainingItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                trainingitems.append(x['item_id'])
-                            trainingitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'AwakeningItem':
-
-                            # print('' + AwakeningItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                awakeningitems.append(x['item_id'])
-                            awakeningitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'TreasureItem':
-
-                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                treasureitems.append(x['item_id'])
-                            treasureitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'Card':
-
-                            # card = Cards.find(x['item_id'])
-
-                            carditems.append(x['item_id'])
-                            carditemsset.add(x['item_id'])
-                        elif x['item_type'] == 'Point::Stone':
-
-            #                print('' + card.name + '['+rarity+']'+ ' x '+str(x['quantity']))
-                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            stones += 1
-                        elif x['item_type'] == 'TrainingField':
-
-                            # card = Cards.find(x['item_id'])
-
-                            for i in range(x['quantity']):
-                                trainingfields.append(x['item_id'])
-                            trainingfieldsset.add(x['item_id'])
-                        else:
-                            print(x['item_type'])
-
-                    # Print items
-                    for x in supportitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.SupportItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.CYAN + Style.BRIGHT+ config.SupportItems.find(x).name + ' x' \
-                            + str(supportitems.count(x)))
-                    for x in awakeningitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.AwakeningItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.MAGENTA + Style.BRIGHT  + config.AwakeningItems.find(x).name + ' x' \
-                            + str(awakeningitems.count(x)))
-                    for x in trainingitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TrainingItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
-                            + str(trainingitems.count(x)))
-                    for x in potentialitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.PotentialItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.PotentialItems.find_or_fail(x).name + ' x' \
-                            + str(potentialitems.count(x)))
-                    for x in treasureitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TreasureItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
-                            + str(treasureitems.count(x)))
-                    for x in trainingfieldsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TrainingFields.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.TrainingFields.find(x).name + ' x' \
-                            + str(trainingfields.count(x)))
-                    for x in carditemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.Cards.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.Cards.find(x).name + ' x' + str(carditems.count(x)))
-                    print(Fore.YELLOW + Style.BRIGHT + 'Stones x' + str(stones))
-                if 'gasha_point' in dec_sign:
-                    print('Friend Points: ' + str(dec_sign['gasha_point']))
-
-                print('--------------------------')
-                print('##############################################')
-                level += 1
-            refresh_client()
-
-    except Exception as e:
-        print(Fore.RED + Style.BRIGHT+str(e))
-        print(Fore.RED + Style.BRIGHT+'Trouble finding new Z-Battle events')
-
-def complete_unfinished_zbattles_plus(kagi = False):
-    # JP Translated
-    headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-            'Accept': '*/*',
-            'Authorization': packet.mac('GET', '/events'),
-            'Content-type': 'application/json',
-            'X-Language': 'en',
-            'X-Platform': config.platform,
-            'X-AssetVersion': '////',
-            'X-DatabaseVersion': '////',
-            'X-ClientVersion': '////',
-            }
-    if config.client == 'global':
-        url = 'https://ishin-global.aktsk.com/events'
-    else:
-        url = 'http://ishin-production.aktsk.jp/events'
-    r = requests.get(url, headers=headers)
-    events = r.json()
-    try:
-        for event in events['z_battle_stages']:
-            try:
-                config.Model.set_connection_resolver(config.db_glb)
-                x = config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name
-            except:
-                config.Model.set_connection_resolver(config.db_jp)
-            print(config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name,end='')
-            print(Fore.CYAN + Style.BRIGHT+' | ID: ' + str(event['id']))
-
-            # Get current zbattle level
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                'Accept': '*/*',
-                'Authorization': packet.mac('GET', '/user_areas'),
-                'Content-type': 'application/json',
-                'X-Language': 'en',
-                'X-Platform': config.platform,
-                'X-AssetVersion': '////',
-                'X-DatabaseVersion': '////',
-                'X-ClientVersion': '////',
-                }
-            if config.client == 'global':
-                url = 'https://ishin-global.aktsk.com/user_areas'
-            else:
-                url = 'http://ishin-production.aktsk.jp/user_areas'
-            r = requests.get(url, headers=headers)
-            if 'user_z_battles' in r.json():
-                zbattles = r.json()['user_z_battles']
-                if zbattles == []:
-                    zbattles = 0
-            else:
-                zbattles = 0
-
-            level = 1
-            for zbattle in zbattles:
-                if int(zbattle['z_battle_stage_id']) == int(event['id']):
-                    level = zbattle['max_clear_level'] + 1
-                    print('Current EZA Level: ' + str(level))
-            
-
-
-            # Stop at level 30 !! This may not work for all zbattle e.g kid gohan
-            while level < 51:
-                ##Get supporters
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('GET', '/z_battles/'+str(event['id'])+'/supporters'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/supporters'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/supporters'   
-                r = requests.get(url, headers=headers)
-                if 'supporters' in r.json():
-                    supporter = r.json()['supporters'][0]['id']
-                elif 'error' in r.json():
-                    print(Fore.RED + Style.BRIGHT+r.json())
-                    return 0
-                else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
-                    print(r.raw())
-                    return 0
-
-                ###Send first request
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(event['id'])+'/start'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-
-
-                if kagi == True:
-                    sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': level,
-                            'selected_team_num': config.deck,
-                            'eventkagi_item_id': 5
-                            })
-                else:
-                    sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': level,
-                            'selected_team_num': config.deck,
-                            })
-
-                enc_sign = packet.encrypt_sign(sign)
-                data = {'sign': enc_sign}
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/start'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/start'
-                r = requests.post(url, data=json.dumps(data), headers=headers)
-
-                if 'sign' in r.json():
-                    dec_sign = packet.decrypt_sign(r.json()['sign'])
-                # Check if error was due to lack of stamina
-                elif 'error' in r.json():
-                    if r.json()['error']['code'] == 'act_is_not_enough':
-                        # Check if allowed to refill stamina
-                        if config.allow_stamina_refill == True:
-                            refill_stamina()
-                            r = requests.post(url, data=json.dumps(data),
-                                    headers=headers)
-                    else:  
-                        print(r.json())
-                        return 0
-                else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
-                    print(r.raw())
-                    return 0
-
-                finish_time = int(round(time.time(), 0)+2000)
-                start_time = finish_time - randint(6200000, 8200000)
-
-                data = {
-                    'elapsed_time': finish_time - start_time,
-                    'is_cleared': True,
-                    'level': level,
-                    's': 'rGAX18h84InCwFGbd/4zr1FvDNKfmo/TJ02pd6onclk=',
-                    't': 'eyJzdW1tYXJ5Ijp7ImVuZW15X2F0dGFjayI6MTAwMzg2LCJlbmVteV9hdHRhY2tfY291bnQiOjUsImVuZW15X2hlYWxfY291bnRzIjpbMF0sImVuZW15X2hlYWxzIjpbMF0sImVuZW15X21heF9hdHRhY2siOjEwMDAwMCwiZW5lbXlfbWluX2F0dGFjayI6NTAwMDAsInBsYXllcl9hdHRhY2tfY291bnRzIjpbMTBdLCJwbGF5ZXJfYXR0YWNrcyI6WzMwNjYwNTJdLCJwbGF5ZXJfaGVhbCI6MCwicGxheWVyX2hlYWxfY291bnQiOjAsInBsYXllcl9tYXhfYXR0YWNrcyI6WzEyMzY4NTBdLCJwbGF5ZXJfbWluX2F0dGFja3MiOls0NzcxOThdLCJ0eXBlIjoic3VtbWFyeSJ9fQ==',
-                    'token': dec_sign['token'],
-                    'used_items': [],
-                    'z_battle_finished_at_ms': finish_time,
-                    'z_battle_started_at_ms': start_time,
-                    }
-                #enc_sign = encrypt_sign(sign)
-
-                headers = {
-                    'User-Agent': 'Android',
-                    'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(event['id'])+'/finish'),
-                    'Content-type': 'application/json',
-                    'X-Platform': config.platform,
-                    'X-AssetVersion': '////',
-                    'X-DatabaseVersion': '////',
-                    'X-ClientVersion': '////',
-                    }
-                if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(event['id'])+'/finish'
-                else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(event['id'])+'/finish'   
-                
-                r = requests.post(url, data=json.dumps(data), headers=headers)
-                dec_sign = packet.decrypt_sign(r.json()['sign'])
-                # ## Print out Items from Database
-                print('Level: '+str(level))
-                # ## Print out Items from Database
-                if 'items' in dec_sign:
-                    supportitems = []
-                    awakeningitems = []
-                    trainingitems = []
-                    potentialitems = []
-                    treasureitems = []
-                    carditems = []
-                    trainingfields = []
-                    stones = 0
-                    supportitemsset = set()
-                    awakeningitemsset = set()
-                    trainingitemsset = set()
-                    potentialitemsset = set()
-                    treasureitemsset = set()
-                    carditemsset = set()
-                    trainingfieldsset = set()
-                    print('Items:')
-                    print('-------------------------')
-                    if 'quest_clear_rewards' in dec_sign:
-                        for x in dec_sign['quest_clear_rewards']:
-                            if x['item_type'] == 'Point::Stone':
-                                stones += x['amount']
-                    for x in dec_sign['items']:
-                        if x['item_type'] == 'SupportItem':
-
-                            # print('' + SupportItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                supportitems.append(x['item_id'])
-                            supportitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'PotentialItem':
-
-                            # print('' + PotentialItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                potentialitems.append(x['item_id'])
-                            potentialitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'TrainingItem':
-
-                            # print('' + TrainingItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                trainingitems.append(x['item_id'])
-                            trainingitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'AwakeningItem':
-
-                            # print('' + AwakeningItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                awakeningitems.append(x['item_id'])
-                            awakeningitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'TreasureItem':
-
-                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            for i in range(x['quantity']):
-                                treasureitems.append(x['item_id'])
-                            treasureitemsset.add(x['item_id'])
-                        elif x['item_type'] == 'Card':
-
-                            # card = Cards.find(x['item_id'])
-
-                            carditems.append(x['item_id'])
-                            carditemsset.add(x['item_id'])
-                        elif x['item_type'] == 'Point::Stone':
-
-            #                print('' + card.name + '['+rarity+']'+ ' x '+str(x['quantity']))
-                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
-
-                            stones += 1
-                        elif x['item_type'] == 'TrainingField':
-
-                            # card = Cards.find(x['item_id'])
-
-                            for i in range(x['quantity']):
-                                trainingfields.append(x['item_id'])
-                            trainingfieldsset.add(x['item_id'])
-                        else:
-                            print(x['item_type'])
-
-                    # Print items
-                    for x in supportitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.SupportItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.CYAN + Style.BRIGHT+ config.SupportItems.find(x).name + ' x' \
-                            + str(supportitems.count(x)))
-                    for x in awakeningitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.AwakeningItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.MAGENTA + Style.BRIGHT  + config.AwakeningItems.find(x).name + ' x' \
-                            + str(awakeningitems.count(x)))
-                    for x in trainingitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TrainingItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
-                            + str(trainingitems.count(x)))
-                    for x in potentialitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.PotentialItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.PotentialItems.find_or_fail(x).name + ' x' \
-                            + str(potentialitems.count(x)))
-                    for x in treasureitemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TreasureItems.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
-                            + str(treasureitems.count(x)))
-                    for x in trainingfieldsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.TrainingFields.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.TrainingFields.find(x).name + ' x' \
-                            + str(trainingfields.count(x)))
-                    for x in carditemsset:
-                        # JP Translation
-                        try:
-                            config.Model.set_connection_resolver(config.db_glb)
-                            config.Cards.find_or_fail(x).name
-                        except:
-                            config.Model.set_connection_resolver(config.db_jp)
-
-                        # Print name and item count
-                        print(config.Cards.find(x).name + ' x' + str(carditems.count(x)))
-                    print(Fore.YELLOW + Style.BRIGHT + 'Stones x' + str(stones))
-                if 'gasha_point' in dec_sign:
-                    print('Friend Points: ' + str(dec_sign['gasha_point']))
-
-                print('--------------------------')
-                print('##############################################')
-                level += 1
-            refresh_client()
-
-    except Exception as e:
-        print(Fore.RED + Style.BRIGHT+str(e))
-        print(Fore.RED + Style.BRIGHT+'Trouble finding new Z-Battle events')
-
-####################################################################
-def set_platform():
-    while True:
-        print('Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ') ',end='')
-        platform = input('')
-        if platform[0].lower() in ['1','2']:
-            if platform[0].lower() == '1':
-                config.platform = 'android'
-            else:
-                config.platform = 'ios'
-            break
-        else:
-            print(Fore.RED + Style.BRIGHT+'Could not identify correct operating system to use.')
-
-####################################################################
-def list_events():
-    # Prints all currently available events
-    # JP Translated
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/events'),
         'Content-type': 'application/json',
@@ -4146,7 +3033,371 @@ def list_events():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/events'
+    else:
+        url = 'http://ishin-production.aktsk.jp/events'
+    r = requests.get(url, headers=headers)
+    events = r.json()
+    try:
+        for event in events['z_battle_stages']:
+            try:
+                config.Model.set_connection_resolver(config.db_glb)
+                x = config.ZBattles.where('z_battle_stage_id', '=', event['id']).first().enemy_name
+            except:
+                config.Model.set_connection_resolver(config.db_jp)
+            print(config.ZBattles.where('z_battle_stage_id', '=', event['id']).first().enemy_name, end='')
+            print(Fore.CYAN + Style.BRIGHT + ' | ID: ' + str(event['id']))
+
+            # Get current zbattle level
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                'Accept': '*/*',
+                'Authorization': packet.mac('GET', '/user_areas'),
+                'Content-type': 'application/json',
+                'X-Language': 'en',
+                'X-Platform': config.platform,
+                'X-AssetVersion': '////',
+                'X-DatabaseVersion': '////',
+                'X-ClientVersion': '////',
+            }
+            if config.client == 'global':
+                url = 'https://ishin-global.aktsk.com/user_areas'
+            else:
+                url = 'http://ishin-production.aktsk.jp/user_areas'
+            r = requests.get(url, headers=headers)
+            if 'user_z_battles' in r.json():
+                zbattles = r.json()['user_z_battles']
+                if zbattles == []:
+                    zbattles = 0
+            else:
+                zbattles = 0
+
+            level = 1
+            for zbattle in zbattles:
+                if int(zbattle['z_battle_stage_id']) == int(event['id']):
+                    level = zbattle['max_clear_level'] + 1
+                    print('Current EZA Level: ' + str(level))
+
+            # Stop at level 30 !! This may not work for all zbattle e.g kid gohan
+            while level < 31:
+                ##Get supporters
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'Accept': '*/*',
+                    'Authorization': packet.mac('GET', '/z_battles/' + str(event['id']) + '/supporters'),
+                    'Content-type': 'application/json',
+                    'X-Platform': config.platform,
+                    'X-AssetVersion': '////',
+                    'X-DatabaseVersion': '////',
+                    'X-ClientVersion': '////',
+                }
+                if config.client == 'global':
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(event['id']) + '/supporters'
+                else:
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(event['id']) + '/supporters'
+                r = requests.get(url, headers=headers)
+                if 'supporters' in r.json():
+                    supporter = r.json()['supporters'][0]['id']
+                elif 'error' in r.json():
+                    print(Fore.RED + Style.BRIGHT + r.json())
+                    return 0
+                else:
+                    print(Fore.RED + Style.BRIGHT + 'Problem with ZBattle')
+                    print(r.raw())
+                    return 0
+
+                ###Send first request
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'Accept': '*/*',
+                    'Authorization': packet.mac('POST', '/z_battles/' + str(event['id']) + '/start'),
+                    'Content-type': 'application/json',
+                    'X-Platform': config.platform,
+                    'X-AssetVersion': '////',
+                    'X-DatabaseVersion': '////',
+                    'X-ClientVersion': '////',
+                }
+
+                if kagi == True:
+                    sign = json.dumps({
+                        'friend_id': supporter,
+                        'level': level,
+                        'selected_team_num': config.deck,
+                        'eventkagi_item_id': 5
+                    })
+                else:
+                    sign = json.dumps({
+                        'friend_id': supporter,
+                        'level': level,
+                        'selected_team_num': config.deck,
+                    })
+
+                enc_sign = packet.encrypt_sign(sign)
+                data = {'sign': enc_sign}
+                if config.client == 'global':
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(event['id']) + '/start'
+                else:
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(event['id']) + '/start'
+                r = requests.post(url, data=json.dumps(data), headers=headers)
+
+                if 'sign' in r.json():
+                    dec_sign = packet.decrypt_sign(r.json()['sign'])
+                # Check if error was due to lack of stamina
+                elif 'error' in r.json():
+                    if r.json()['error']['code'] == 'act_is_not_enough':
+                        # Check if allowed to refill stamina
+                        if config.allow_stamina_refill == True:
+                            refill_stamina()
+                            r = requests.post(url, data=json.dumps(data),
+                                              headers=headers)
+                    else:
+                        print(r.json())
+                        return 0
+                else:
+                    print(Fore.RED + Style.BRIGHT + 'Problem with ZBattle')
+                    print(r.raw())
+                    return 0
+
+                finish_time = int(round(time.time(), 0) + 2000)
+                start_time = finish_time - randint(6200000, 8200000)
+
+                data = {
+                    'elapsed_time': finish_time - start_time,
+                    'is_cleared': True,
+                    'level': level,
+                    's': 'rGAX18h84InCwFGbd/4zr1FvDNKfmo/TJ02pd6onclk=',
+                    't': 'eyJzdW1tYXJ5Ijp7ImVuZW15X2F0dGFjayI6MTAwMzg2LCJlbmVteV9hdHRhY2tfY291bnQiOjUsImVuZW15X2hlYWxfY291bnRzIjpbMF0sImVuZW15X2hlYWxzIjpbMF0sImVuZW15X21heF9hdHRhY2siOjEwMDAwMCwiZW5lbXlfbWluX2F0dGFjayI6NTAwMDAsInBsYXllcl9hdHRhY2tfY291bnRzIjpbMTBdLCJwbGF5ZXJfYXR0YWNrcyI6WzMwNjYwNTJdLCJwbGF5ZXJfaGVhbCI6MCwicGxheWVyX2hlYWxfY291bnQiOjAsInBsYXllcl9tYXhfYXR0YWNrcyI6WzEyMzY4NTBdLCJwbGF5ZXJfbWluX2F0dGFja3MiOls0NzcxOThdLCJ0eXBlIjoic3VtbWFyeSJ9fQ==',
+                    'token': dec_sign['token'],
+                    'used_items': [],
+                    'z_battle_finished_at_ms': finish_time,
+                    'z_battle_started_at_ms': start_time,
+                }
+                # enc_sign = encrypt_sign(sign)
+
+                headers = {
+                    'User-Agent': 'Android',
+                    'Accept': '*/*',
+                    'Authorization': packet.mac('POST', '/z_battles/' + str(event['id']) + '/finish'),
+                    'Content-type': 'application/json',
+                    'X-Platform': config.platform,
+                    'X-AssetVersion': '////',
+                    'X-DatabaseVersion': '////',
+                    'X-ClientVersion': '////',
+                }
+                if config.client == 'global':
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(event['id']) + '/finish'
+                else:
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(event['id']) + '/finish'
+
+                r = requests.post(url, data=json.dumps(data), headers=headers)
+                dec_sign = packet.decrypt_sign(r.json()['sign'])
+                # ## Print out Items from Database
+                print('Level: ' + str(level))
+                # ## Print out Items from Database
+                if 'items' in dec_sign:
+                    supportitems = []
+                    awakeningitems = []
+                    trainingitems = []
+                    potentialitems = []
+                    treasureitems = []
+                    carditems = []
+                    trainingfields = []
+                    stones = 0
+                    supportitemsset = set()
+                    awakeningitemsset = set()
+                    trainingitemsset = set()
+                    potentialitemsset = set()
+                    treasureitemsset = set()
+                    carditemsset = set()
+                    trainingfieldsset = set()
+                    print('Items:')
+                    print('-------------------------')
+                    if 'quest_clear_rewards' in dec_sign:
+                        for x in dec_sign['quest_clear_rewards']:
+                            if x['item_type'] == 'Point::Stone':
+                                stones += x['amount']
+                    for x in dec_sign['items']:
+                        if x['item_type'] == 'SupportItem':
+
+                            # print('' + SupportItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            for i in range(x['quantity']):
+                                supportitems.append(x['item_id'])
+                            supportitemsset.add(x['item_id'])
+                        elif x['item_type'] == 'PotentialItem':
+
+                            # print('' + PotentialItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            for i in range(x['quantity']):
+                                potentialitems.append(x['item_id'])
+                            potentialitemsset.add(x['item_id'])
+                        elif x['item_type'] == 'TrainingItem':
+
+                            # print('' + TrainingItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            for i in range(x['quantity']):
+                                trainingitems.append(x['item_id'])
+                            trainingitemsset.add(x['item_id'])
+                        elif x['item_type'] == 'AwakeningItem':
+
+                            # print('' + AwakeningItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            for i in range(x['quantity']):
+                                awakeningitems.append(x['item_id'])
+                            awakeningitemsset.add(x['item_id'])
+                        elif x['item_type'] == 'TreasureItem':
+
+                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            for i in range(x['quantity']):
+                                treasureitems.append(x['item_id'])
+                            treasureitemsset.add(x['item_id'])
+                        elif x['item_type'] == 'Card':
+
+                            # card = Cards.find(x['item_id'])
+
+                            carditems.append(x['item_id'])
+                            carditemsset.add(x['item_id'])
+                        elif x['item_type'] == 'Point::Stone':
+
+                            #                print('' + card.name + '['+rarity+']'+ ' x '+str(x['quantity']))
+                            # print('' + TreasureItems.find(x['item_id']).name + ' x '+str(x['quantity']))
+
+                            stones += 1
+                        elif x['item_type'] == 'TrainingField':
+
+                            # card = Cards.find(x['item_id'])
+
+                            for i in range(x['quantity']):
+                                trainingfields.append(x['item_id'])
+                            trainingfieldsset.add(x['item_id'])
+                        else:
+                            print(x['item_type'])
+
+                    # Print items
+                    for x in supportitemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.SupportItems.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(Fore.CYAN + Style.BRIGHT + config.SupportItems.find(x).name + ' x' \
+                              + str(supportitems.count(x)))
+                    for x in awakeningitemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.AwakeningItems.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(Fore.MAGENTA + Style.BRIGHT + config.AwakeningItems.find(x).name + ' x' \
+                              + str(awakeningitems.count(x)))
+                    for x in trainingitemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.TrainingItems.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
+                              + str(trainingitems.count(x)))
+                    for x in potentialitemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.PotentialItems.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(config.PotentialItems.find_or_fail(x).name + ' x' \
+                              + str(potentialitems.count(x)))
+                    for x in treasureitemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.TreasureItems.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
+                              + str(treasureitems.count(x)))
+                    for x in trainingfieldsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.TrainingFields.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(config.TrainingFields.find(x).name + ' x' \
+                              + str(trainingfields.count(x)))
+                    for x in carditemsset:
+                        # JP Translation
+                        try:
+                            config.Model.set_connection_resolver(config.db_glb)
+                            config.Cards.find_or_fail(x).name
+                        except:
+                            config.Model.set_connection_resolver(config.db_jp)
+
+                        # Print name and item count
+                        print(config.Cards.find(x).name + ' x' + str(carditems.count(x)))
+                    print(Fore.YELLOW + Style.BRIGHT + 'Stones x' + str(stones))
+                if 'gasha_point' in dec_sign:
+                    print('Friend Points: ' + str(dec_sign['gasha_point']))
+
+                print('--------------------------')
+                print('##############################################')
+                level += 1
+            refresh_client()
+
+    except Exception as e:
+        print(Fore.RED + Style.BRIGHT + str(e))
+        print(Fore.RED + Style.BRIGHT + 'Trouble finding new Z-Battle events')
+
+
+####################################################################
+def set_platform():
+    while True:
+        print(
+        'Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ') ',end='')
+        platform = input('')
+        if platform[0].lower() in ['1', '2']:
+            if platform[0].lower() == '1':
+                config.platform = 'android'
+            else:
+                config.platform = 'ios'
+            break
+        else:
+            print(Fore.RED + Style.BRIGHT + 'Could not identify correct operating system to use.')
+
+
+####################################################################
+def list_events():
+    # Prints all currently available events
+    # JP Translated
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/events'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/events'
     else:
@@ -4161,34 +3412,36 @@ def list_events():
                 area_id = str(event['id'])
                 try:
                     config.Model.set_connection_resolver(config.db_glb)
-                    area_name = str(config.Area.where('id', '=',area_id).first().name)
+                    area_name = str(config.Area.where('id', '=', area_id).first().name)
                 except:
                     config.Model.set_connection_resolver(config.db_jp)
-                    area_name = str(config.Area.where('id', '=',area_id).first().name)
+                    area_name = str(config.Area.where('id', '=', area_id).first().name)
                 print('--------------------------------------------')
                 print(Back.BLUE + Fore.WHITE + Style.BRIGHT \
-                    + area_name)
+                      + area_name)
                 print('--------------------------------------------')
 
             ids = quest['id']
             config.Model.set_connection_resolver(config.db_glb)
-            sugorokus = config.Sugoroku.where('quest_id', '=',int(ids)).get()
+            sugorokus = config.Sugoroku.where('quest_id', '=', int(ids)).get()
             if len(sugorokus) < 1:
                 config.Model.set_connection_resolver(config.db_jp)
-                sugorokus = config.Sugoroku.where('quest_id', '=',int(ids)).get()
+                sugorokus = config.Sugoroku.where('quest_id', '=', int(ids)).get()
             difficulties = []
             for sugoroku in sugorokus:
                 difficulties.append(sugoroku.difficulty)
-            print(config.Quests.find(ids).name  + ' ' + str(ids) \
-                + ' Difficulties: ' + str(difficulties) \
-                + ' AreaID: ' + str(event['id']))
+            print(config.Quests.find(ids).name + ' ' + str(ids) \
+                  + ' Difficulties: ' + str(difficulties) \
+                  + ' AreaID: ' + str(event['id']))
+
+
 ####################################################################
 def event_viewer():
-    #Event GUI with options to complete stage.
-    #JP Translation needs work
+    # Event GUI with options to complete stage.
+    # JP Translation needs work
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/events'),
         'Content-type': 'application/json',
@@ -4197,7 +3450,7 @@ def event_viewer():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/events'
     else:
@@ -4214,10 +3467,10 @@ def event_viewer():
         area_id = str(event['id'])
         try:
             config.Model.set_connection_resolver(config.db_glb)
-            area_name = area_id + ' | ' + str(config.Area.where('id', '=',area_id).first().name)
+            area_name = area_id + ' | ' + str(config.Area.where('id', '=', area_id).first()+ config.Quests('name'))
         except:
             config.Model.set_connection_resolver(config.db_jp)
-            area_name = area_id + ' | ' + str(config.Area.where('id', '=',area_id).first().name)
+            area_name = area_id + ' | ' + str(config.Area.where('id', '=', area_id).first()+ config.Quests('name'))
         areas_to_display.append(area_name)
         stage_ids[:] = []
         for quest in event['quests']:
@@ -4228,27 +3481,27 @@ def event_viewer():
     difficulties = [0]
     stage_name = ''
 
-    col1 = [[sg.Listbox(values=(sorted(areas_to_display)),change_submits = True,size = (30,20),key='AREAS')]]
-    col2 = [[sg.Listbox(values=(sorted(stages_to_display)),change_submits = True,size = (30,20),key = 'STAGES')]]
-    col3 = [[sg.Text('Name',key = 'STAGE_NAME',size = (30,2))],
-            [sg.Text('Difficulty: '),sg.Combo(difficulties,key = 'DIFFICULTIES',size=(6,3),readonly=True)],
+    col1 = [[sg.Listbox(values=(sorted(areas_to_display)), change_submits=True, size=(30, 20), key='AREAS')]]
+    col2 = [[sg.Listbox(values=(sorted(stages_to_display)), change_submits=True, size=(30, 20), key='STAGES')]]
+    col3 = [[sg.Text('Name', key='STAGE_NAME', size=(30, 2))],
+            [sg.Text('Difficulty: '), sg.Combo(difficulties, key='DIFFICULTIES', size=(6, 3), readonly=True)],
             [sg.Text('How many times to complete:')
-            ,sg.Spin([i for i in range(1,999)], key = 'LOOP',initial_value=1,size=(3,3))],
-            [sg.Button(button_text = 'Complete Stage',key = 'COMPLETE_STAGE')]]
+                , sg.Spin([i for i in range(1, 999)], key='LOOP', initial_value=1, size=(3, 3))],
+            [sg.Button(button_text='Complete Stage', key='COMPLETE_STAGE')]]
 
-    layout = [[sg.Column(col1),sg.Column(col2),sg.Column(col3)]]
+    layout = [[sg.Column(col1), sg.Column(col2), sg.Column(col3)]]
     window = sg.Window('Event Viewer').Layout(layout)
 
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
         if event == None:
             return 0
 
         if event == 'AREAS' and len(values['AREAS']) > 0:
             stages_to_display[:] = []
-            # Check if GLB database has id, if not try JP DB.   
+            # Check if GLB database has id, if not try JP DB.
             area_id = values['AREAS'][0].split(' | ')[0]
-                        
+
             for stage_id in areas[area_id]:
                 try:
                     config.Model.set_connection_resolver(config.db_glb)
@@ -4262,7 +3515,7 @@ def event_viewer():
             difficulties[:] = []
             stage_id = values['STAGES'][0].split(' | ')[1]
             stage_name = values['STAGES'][0].split(' | ')[0]
-            sugorokus = config.Sugoroku.where('quest_id', '=',str(stage_id)).get()
+            sugorokus = config.Sugoroku.where('quest_id', '=', str(stage_id)).get()
             difficulties = []
             for sugoroku in sugorokus:
                 difficulties.append(str(sugoroku.difficulty))
@@ -4273,15 +3526,17 @@ def event_viewer():
             window.Hide()
             window.Refresh()
             for i in range(int(values['LOOP'])):
-                complete_stage(stage_id,values['DIFFICULTIES'])
+                complete_stage(stage_id, values['DIFFICULTIES'])
             window.UnHide()
             window.Refresh()
 
         window.FindElement('STAGES').Update(values=stages_to_display)
+
+
 ####################################################################
 def complete_potential():
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/events'),
         'Content-type': 'application/json',
@@ -4290,7 +3545,7 @@ def complete_potential():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/events'
     else:
@@ -4303,19 +3558,20 @@ def complete_potential():
                 ids = quest['id']
                 config.Model.set_connection_resolver(config.db_jp)
                 sugorokus = config.Sugoroku.where('quest_id', '=',
-                        int(ids)).get()
+                                                  int(ids)).get()
                 difficulties = []
                 for sugoroku in sugorokus:
                     config.Model.set_connection_resolver(config.db_jp)
-                    complete_stage(str(ids),sugoroku.difficulty)
+                    complete_stage(str(ids), sugoroku.difficulty)
+
+
 ####################################################################
 
 def list_summons():
-
     # Prints current available summons, could be formatted better but meh
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/gashas'),
         'Content-type': 'application/json',
@@ -4324,7 +3580,7 @@ def list_summons():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
 
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/gashas'
@@ -4334,14 +3590,15 @@ def list_summons():
     r = requests.get(url, headers=headers)
 
     for gasha in r.json()['gashas']:
-        print(gasha['name'].replace('\n',' ') + ' ' + str(gasha['id']))
-        if len(gasha['description'])>0:
-            print(Fore.YELLOW+re.sub(r'\{[^{}]*\}', "", gasha['description']).replace('\n',' '))
+        print(gasha['name'].replace('\n', ' ') + ' ' + str(gasha['id']))
+        if len(gasha['description']) > 0:
+            print(Fore.YELLOW + re.sub(r'\{[^{}]*\}', "", gasha['description']).replace('\n', ' '))
+
 
 ####################################################################
 def summon():
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/gashas'),
         'Content-type': 'application/json',
@@ -4350,7 +3607,7 @@ def summon():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
 
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/gashas'
@@ -4361,14 +3618,14 @@ def summon():
     for gasha in r.json()['gashas']:
         gashas.append(gasha['name'] + ' | ' + str(gasha['id']))
 
-    layout = [[sg.Listbox(values=(gashas),size = (30,20),key = 'GASHAS')],
+    layout = [[sg.Listbox(values=(gashas), size=(30, 20), key='GASHAS')],
               [sg.Radio('Multi', "TYPE", default=True), sg.Radio('Single', "TYPE")],
-              [sg.Spin([i for i in range(1,999)], key = 'LOOP',initial_value=1,size=(3,3))],
-              [sg.Button(button_text= 'Summon!',key='SUMMON')]]
+              [sg.Spin([i for i in range(1, 999)], key='LOOP', initial_value=1, size=(3, 3))],
+              [sg.Button(button_text='Summon!', key='SUMMON')]]
     window = sg.Window('Event Viewer').Layout(layout)
 
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
         if event == None:
             return 0
 
@@ -4376,22 +3633,22 @@ def summon():
             summon_id = values['GASHAS'][0].split(' | ')[1]
             if values[0]:
                 headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                     'Accept': '*/*',
                     'Authorization': packet.mac('POST', '/gashas/' + str(summon_id)
-                                            + '/courses/2/draw'),
+                                                + '/courses/2/draw'),
                     'Content-type': 'application/json',
                     'X-Platform': config.platform,
                     'X-AssetVersion': '////',
                     'X-DatabaseVersion': '////',
                     'X-ClientVersion': '////',
-                    }
+                }
                 if config.client == 'global':
                     url = 'https://ishin-global.aktsk.com/gashas/' + str(summon_id) \
-                                                                   + '/courses/2/draw'
+                          + '/courses/2/draw'
                 else:
                     url = 'http://ishin-production.aktsk.jp/gashas/' + str(summon_id) \
-                    + '/courses/2/draw'
+                          + '/courses/2/draw'
                 window.Hide()
                 window.Refresh()
                 for i in range(int(values['LOOP'])):
@@ -4410,17 +3667,17 @@ def summon():
                             config.Cards.find_or_fail(int(card['item_id'])).rarity
 
                         if config.Cards.find(int(card['item_id'])).rarity == 0:
-                            rarity = Fore.RED + Style.BRIGHT + 'N'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'N' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 1:
-                            rarity = Fore.RED + Style.BRIGHT + 'R'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'R' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 2:
-                            rarity = Fore.RED + Style.BRIGHT + 'SR'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'SR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 3:
                             rarity = Fore.YELLOW + 'SSR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 4:
-                            rarity = Fore.MAGENTA + Style.BRIGHT + 'UR'+ Style.RESET_ALL
+                            rarity = Fore.MAGENTA + Style.BRIGHT + 'UR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 5:
-                            rarity = Fore.CYAN + 'LR'+ Style.RESET_ALL
+                            rarity = Fore.CYAN + 'LR' + Style.RESET_ALL
                         if str(config.Cards.find(int(card['item_id'])).element)[-1] == '0':
                             type = Fore.CYAN + Style.BRIGHT + 'AGL '
                         elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '1':
@@ -4432,7 +3689,7 @@ def summon():
                         elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '4':
                             type = Fore.YELLOW + 'PHY '
                         card_list.append(type + config.Cards.find(int(card['item_id'
-                                         ])).name + ' ' +rarity)
+                                                                      ])).name + ' ' + rarity)
                     for card in card_list:
                         print(card)
                 window.UnHide()
@@ -4441,22 +3698,22 @@ def summon():
 
             else:
                 headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                     'Accept': '*/*',
                     'Authorization': packet.mac('POST', '/gashas/' + str(summon_id)
-                                            + '/courses/1/draw'),
+                                                + '/courses/1/draw'),
                     'Content-type': 'application/json',
                     'X-Platform': config.platform,
                     'X-AssetVersion': '////',
                     'X-DatabaseVersion': '////',
                     'X-ClientVersion': '////',
-                    }
+                }
                 if config.client == 'global':
                     url = 'https://ishin-global.aktsk.com/gashas/' + str(summon_id) \
-                                                                   + '/courses/1/draw'
+                          + '/courses/1/draw'
                 else:
                     url = 'http://ishin-production.aktsk.jp/gashas/' + str(summon_id) \
-                    + '/courses/1/draw'
+                          + '/courses/1/draw'
                 window.Hide()
                 window.Refresh()
                 for i in range(int(values['LOOP'])):
@@ -4475,17 +3732,17 @@ def summon():
                             config.Cards.find_or_fail(int(card['item_id'])).rarity
 
                         if config.Cards.find(int(card['item_id'])).rarity == 0:
-                            rarity = Fore.RED + Style.BRIGHT + 'N'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'N' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 1:
-                            rarity = Fore.RED + Style.BRIGHT + 'R'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'R' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 2:
-                            rarity = Fore.RED + Style.BRIGHT + 'SR'+ Style.RESET_ALL
+                            rarity = Fore.RED + Style.BRIGHT + 'SR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 3:
                             rarity = Fore.YELLOW + 'SSR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 4:
-                            rarity = Fore.MAGENTA + Style.BRIGHT + 'UR'+ Style.RESET_ALL
+                            rarity = Fore.MAGENTA + Style.BRIGHT + 'UR' + Style.RESET_ALL
                         elif config.Cards.find(int(card['item_id'])).rarity == 5:
-                            rarity = Fore.CYAN + 'LR'+ Style.RESET_ALL
+                            rarity = Fore.CYAN + 'LR' + Style.RESET_ALL
                         if str(config.Cards.find(int(card['item_id'])).element)[-1] == '0':
                             type = Fore.CYAN + Style.BRIGHT + 'AGL '
                         elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '1':
@@ -4497,17 +3754,19 @@ def summon():
                         elif str(config.Cards.find(int(card['item_id'])).element)[-1] == '4':
                             type = Fore.YELLOW + 'PHY '
                         card_list.append(type + config.Cards.find(int(card['item_id'
-                                         ])).name + ' ' +rarity)
+                                                                      ])).name + ' ' + rarity)
                     for card in card_list:
                         print(card)
                 window.UnHide()
                 window.Refresh()
             print('------------------------------------------')
+
+
 ####################################################################
 def sell_cards__bulk_GUI():
-    #Provides a GUI to select a range of cards to sell.
+    # Provides a GUI to select a range of cards to sell.
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/teams'),
         'Content-type': 'application/json',
@@ -4516,7 +3775,7 @@ def sell_cards__bulk_GUI():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
 
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/teams'
@@ -4528,9 +3787,8 @@ def sell_cards__bulk_GUI():
     for team in r.json()['user_card_teams']:
         team_cards.extend(team['user_card_ids'])
 
-
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/support_leaders'),
         'Content-type': 'application/json',
@@ -4539,7 +3797,7 @@ def sell_cards__bulk_GUI():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
 
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/support_leaders'
@@ -4548,9 +3806,8 @@ def sell_cards__bulk_GUI():
     r = requests.get(url, headers=headers)
     team_cards.extend(r.json()['support_leader_ids'])
 
-
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/cards'),
         'Content-type': 'application/json',
@@ -4559,7 +3816,7 @@ def sell_cards__bulk_GUI():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
 
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/cards'
@@ -4583,11 +3840,11 @@ def sell_cards__bulk_GUI():
             rarity = config.Cards.find_or_fail(card['card_id']).rarity
             if card['id'] not in team_cards:
                 cards_master_dict.append({
-                              'card_id' : card['card_id'],
-                              'unique_id' : card['id'],
-                              'name' : card_name,
-                              'rarity' : rarity
-                            })
+                    'card_id': card['card_id'],
+                    'unique_id': card['id'],
+                    'name': card_name,
+                    'rarity': rarity
+                })
         except:
             config.Model.set_connection_resolver(config.db_jp)
             # Quick and dirty way to exclude elder kais from sell
@@ -4600,12 +3857,11 @@ def sell_cards__bulk_GUI():
             rarity = config.Cards.find_or_fail(card['card_id']).rarity
             if card['id'] not in team_cards:
                 cards_master_dict.append({
-                              'card_id' : card['card_id'],
-                              'unique_id' : card['id'],
-                              'name' : card_name,
-                              'rarity' : rarity
-                            })
-
+                    'card_id': card['card_id'],
+                    'unique_id': card['id'],
+                    'name': card_name,
+                    'rarity': rarity
+                })
 
     cards_to_display_dicts = []
     cards_to_display_dicts = cards_master_dict[:]
@@ -4614,21 +3870,21 @@ def sell_cards__bulk_GUI():
     for card in cards_to_display_dicts:
         cards_to_display.append(card['name'])
 
-    col1 = [[sg.Checkbox('N',default=False, key = 'N',change_submits = True)],
-            [sg.Checkbox('R',default=False, key = 'R',change_submits = True)],
-            [sg.Checkbox('SR',default=False, key = 'SR',change_submits = True)],
-            [sg.Checkbox('SSR',default=False, key = 'SSR',change_submits = True)]]
-    col2 = [[sg.Listbox(values=([]),size = (30,20),key = 'CARDS')]]
-    layout = [[sg.Column(col1),sg.Column(col2)],[sg.Button(button_text= 'Sell!',key='SELL')]]
+    col1 = [[sg.Checkbox('N', default=False, key='N', change_submits=True)],
+            [sg.Checkbox('R', default=False, key='R', change_submits=True)],
+            [sg.Checkbox('SR', default=False, key='SR', change_submits=True)],
+            [sg.Checkbox('SSR', default=False, key='SSR', change_submits=True)]]
+    col2 = [[sg.Listbox(values=([]), size=(30, 20), key='CARDS')]]
+    layout = [[sg.Column(col1), sg.Column(col2)], [sg.Button(button_text='Sell!', key='SELL')]]
     window = sg.Window('Sell Cards').Layout(layout)
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             window.Close()
             return 0
 
-        if event in ['N','R','SR','SSR','SELL']:
+        if event in ['N', 'R', 'SR', 'SSR', 'SELL']:
             accepted_rarities = []
             if values['N']:
                 accepted_rarities.append(0)
@@ -4662,48 +3918,49 @@ def sell_cards__bulk_GUI():
                     cards_to_display.append(card['name'])
             window.UnHide()
             window.Refresh()
-            
 
         window.FindElement('CARDS').Update(values=cards_to_display)
 
     return 0
+
+
 ####################################################################
 def items_viewer():
-
     # ## Accepts Outstanding Login Bonuses
     headers = {
         'User-Agent': 'Android',
         'Accept': '*/*',
-        'Authorization': packet.mac('GET', '/resources/login?potential_items=true&training_items=true&support_items=true&treasure_items=true&special_items=true'),
+        'Authorization': packet.mac('GET',
+                                    '/resources/login?potential_items=true&training_items=true&support_items=true&treasure_items=true&special_items=true'),
         'X-Language': 'en',
         'Content-type': 'application/json',
         'X-Platform': config.platform,
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/resources/login?potential_items=true&training_items=true&support_items=true&treasure_items=true&special_items=true'
     else:
         url = 'http://ishin-production.aktsk.jp/resources/login?potential_items=true&training_items=true&support_items=true&treasure_items=true&special_items=true'
     r = requests.get(url, headers=headers)
-    
-    col1 = [[sg.Checkbox('Support Items',default=False, key = 'SUPPORT',change_submits = True)],
-            [sg.Checkbox('Training Items',default=False, key = 'TRAINING',change_submits = True)],
-            [sg.Checkbox('Potential Items',default=False, key = 'POTENTIAL',change_submits = True)],
-            [sg.Checkbox('Treasure Items',default=False, key = 'TREASURE',change_submits = True)],
-            [sg.Checkbox('Special Items',default=False, key = 'SPECIAL',change_submits = True)]]
-    col2 = [[sg.Output(size = (40,30))]]
-    layout = [[sg.Column(col1),sg.Column(col2)]]
+
+    col1 = [[sg.Checkbox('Support Items', default=False, key='SUPPORT', change_submits=True)],
+            [sg.Checkbox('Training Items', default=False, key='TRAINING', change_submits=True)],
+            [sg.Checkbox('Potential Items', default=False, key='POTENTIAL', change_submits=True)],
+            [sg.Checkbox('Treasure Items', default=False, key='TREASURE', change_submits=True)],
+            [sg.Checkbox('Special Items', default=False, key='SPECIAL', change_submits=True)]]
+    col2 = [[sg.Output(size=(40, 30))]]
+    layout = [[sg.Column(col1), sg.Column(col2)]]
     window = sg.Window('Items').Layout(layout)
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             window.Close()
             return 0
 
-        if event in ['SUPPORT','TRAINING','POTENTIAL','TREASURE','SPECIAL']:
+        if event in ['SUPPORT', 'TRAINING', 'POTENTIAL', 'TREASURE', 'SPECIAL']:
             os.system('cls' if os.name == 'nt' else 'clear')
             if values['SUPPORT']:
                 print('\n##########################')
@@ -4713,10 +3970,12 @@ def items_viewer():
                 for item in r.json()['support_items']['items']:
                     try:
                         config.Model.set_connection_resolver(config.db_glb)
-                        print(str(config.SupportItems.find_or_fail(item['item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.SupportItems.find_or_fail(item['item_id']).name) + ' x' + str(
+                            item['quantity']))
                     except:
                         config.Model.set_connection_resolver(config.db_jp)
-                        print(str(config.SupportItems.find_or_fail(item['item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.SupportItems.find_or_fail(item['item_id']).name) + ' x' + str(
+                            item['quantity']))
                 window.Refresh()
             if values['TRAINING']:
                 print('\n##########################')
@@ -4726,10 +3985,12 @@ def items_viewer():
                 for item in r.json()['training_items']:
                     try:
                         config.Model.set_connection_resolver(config.db_glb)
-                        print(str(config.TrainingItems.find(item['training_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.TrainingItems.find(item['training_item_id']).name) + ' x' + str(
+                            item['quantity']))
                     except:
                         config.Model.set_connection_resolver(config.db_jp)
-                        print(str(config.TrainingItems.find(item['training_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.TrainingItems.find(item['training_item_id']).name) + ' x' + str(
+                            item['quantity']))
                 window.Refresh()
             if values['POTENTIAL']:
                 print('\n##########################')
@@ -4739,11 +4000,13 @@ def items_viewer():
                 for item in reversed(r.json()['potential_items']['user_potential_items']):
                     try:
                         config.Model.set_connection_resolver(config.db_glb)
-                        print(str(config.PotentialItems.find(item['potential_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.PotentialItems.find(item['potential_item_id']).name) + ' x' + str(
+                            item['quantity']))
                         print(config.PotentialItems.find(item['potential_item_id']).description)
                     except:
                         config.Model.set_connection_resolver(config.db_jp)
-                        print(str(config.PotentialItems.find(item['potential_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.PotentialItems.find(item['potential_item_id']).name) + ' x' + str(
+                            item['quantity']))
                         print(config.PotentialItems.find(item['potential_item_id']).description)
                 window.Refresh()
             if values['TREASURE']:
@@ -4754,10 +4017,12 @@ def items_viewer():
                 for item in r.json()['treasure_items']['user_treasure_items']:
                     try:
                         config.Model.set_connection_resolver(config.db_glb)
-                        print(str(config.TreasureItems.find(item['treasure_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.TreasureItems.find(item['treasure_item_id']).name) + ' x' + str(
+                            item['quantity']))
                     except:
                         config.Model.set_connection_resolver(config.db_jp)
-                        print(str(config.TreasureItems.find(item['treasure_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.TreasureItems.find(item['treasure_item_id']).name) + ' x' + str(
+                            item['quantity']))
                 window.Refresh()
             if values['SPECIAL']:
                 print('\n##########################')
@@ -4767,24 +4032,28 @@ def items_viewer():
                 for item in r.json()['special_items']:
                     try:
                         config.Model.set_connection_resolver(config.db_glb)
-                        print(str(config.SpecialItems.find(item['special_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.SpecialItems.find(item['special_item_id']).name) + ' x' + str(
+                            item['quantity']))
                     except:
                         config.Model.set_connection_resolver(config.db_jp)
-                        print(str(config.SpecialItems.find(item['special_item_id']).name)+' x'+str(item['quantity']))
+                        print(str(config.SpecialItems.find(item['special_item_id']).name) + ' x' + str(
+                            item['quantity']))
                 window.Refresh()
+
+
 ####################################################################
 def list_cards():
     headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-            'Accept': '*/*',
-            'Authorization': packet.mac('GET', '/cards'),
-            'Content-type': 'application/json',
-            'X-Language': 'en',
-            'X-Platform': config.platform,
-            'X-AssetVersion': '////',
-            'X-DatabaseVersion': '////',
-            'X-ClientVersion': '////',
-            }
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/cards'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/cards'
     else:
@@ -4846,55 +4115,56 @@ def list_cards():
             links_skill_ids.append(config.Cards.find_or_fail(card['card_id']).link_skill7_id)
 
         cards[card['card_id']] = {
-                                  'id' : card['card_id'],
-                                  'unique_id' : card['id'],
-                                  'name' : name,
-                                  'type' : element,
-                                  'cost' : cost,
-                                  'leader_skill_id' : leader_skill_id,
-                                  'link_skill_ids' : links_skill_ids,
-                                  'passive_skill_id' : passive_skill_id
-                                 }
+            'id': card['card_id'],
+            'unique_id': card['id'],
+            'name': name,
+            'type': element,
+            'cost': cost,
+            'leader_skill_id': leader_skill_id,
+            'link_skill_ids': links_skill_ids,
+            'passive_skill_id': passive_skill_id
+        }
     cards_sort = []
     for item in cards:
         cards_sort.append(cards[item])
 
     # Sort cards for listbox
-    cards_sort = sorted(cards_sort, key = lambda k:k['name'])
-    cards_sort = sorted(cards_sort, key = lambda k:k['cost'])
+    cards_sort = sorted(cards_sort, key=lambda k: k['name'])
+    cards_sort = sorted(cards_sort, key=lambda k: k['cost'])
 
     # Card strings to for listbox value
     cards_to_display = []
     for card in cards_sort:
-        cards_to_display.append(card['type']+' '+str(card['cost'])+' '+card['name'] + ' | ' + str(card['id']))
+        cards_to_display.append(card['type'] + ' ' + str(card['cost']) + ' ' + card['name'] + ' | ' + str(card['id']))
 
-    col1 = [[sg.Listbox(values = (cards_to_display),size = (30,30), key = 'CARDS',change_submits = True,font = ('Courier', 15, 'bold'))]]
-    col2 = [[sg.Text('Type', key = 'TYPE',font = ('', 15, 'bold'),auto_size_text = True),
-             sg.Text('Name', key = 'NAME', size = (None,3),font = ('', 15, 'bold'),auto_size_text = True)],
-            [sg.Text('Cost',key = 'COST',font = ('', 10, 'bold'))],
-            [sg.Text('Leader Skill',key = 'LEADERSKILLNAME',size = (None,1),font = ('', 12, 'bold underline'))],
-            [sg.Text('Leader Skill Description',key = 'LEADERSKILLDESC',size = (None,4),font = ('', 10, 'bold'))],
-            [sg.Text('Passive',key = 'PASSIVESKILLNAME',size = (None,2),font = ('', 12, 'bold underline'))],
-            [sg.Text('Passive Description',key = 'PASSIVESKILLDESC',size = (None,5),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL1',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL2',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL3',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL4',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL5',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL6',size = (None,1),font = ('', 10, 'bold'))],
-            [sg.Text('Link Skill',key = 'LINKSKILL7',size = (None,1),font = ('', 10, 'bold'))]]
+    col1 = [[sg.Listbox(values=(cards_to_display), size=(30, 30), key='CARDS', change_submits=True,
+                        font=('Courier', 15, 'bold'))]]
+    col2 = [[sg.Text('Type', key='TYPE', font=('', 15, 'bold'), auto_size_text=True),
+             sg.Text('Name', key='NAME', size=(None, 3), font=('', 15, 'bold'), auto_size_text=True)],
+            [sg.Text('Cost', key='COST', font=('', 10, 'bold'))],
+            [sg.Text('Leader Skill', key='LEADERSKILLNAME', size=(None, 1), font=('', 12, 'bold underline'))],
+            [sg.Text('Leader Skill Description', key='LEADERSKILLDESC', size=(None, 4), font=('', 10, 'bold'))],
+            [sg.Text('Passive', key='PASSIVESKILLNAME', size=(None, 2), font=('', 12, 'bold underline'))],
+            [sg.Text('Passive Description', key='PASSIVESKILLDESC', size=(None, 5), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL1', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL2', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL3', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL4', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL5', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL6', size=(None, 1), font=('', 10, 'bold'))],
+            [sg.Text('Link Skill', key='LINKSKILL7', size=(None, 1), font=('', 10, 'bold'))]]
 
-    layout = [[sg.Column(col1),sg.Column(col2)]]
+    layout = [[sg.Column(col1), sg.Column(col2)]]
     window = sg.Window('Items').Layout(layout)
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             window.Close()
             return 0
 
         if event == 'CARDS':
-            # Get Card ID 
+            # Get Card ID
             card_id = int(values['CARDS'][0].split(' | ')[1])
 
             # Get correct colour for card element
@@ -4914,13 +4184,17 @@ def list_cards():
             # Retrieve leaderskill from DB
             try:
                 config.Model.set_connection_resolver(config.db_glb)
-                leader_skill_name = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).name.replace('\n',' ')
-                leader_skill_desc = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).description.replace('\n',' ')
+                leader_skill_name = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).name.replace(
+                    '\n', ' ')
+                leader_skill_desc = config.LeaderSkills.find_or_fail(
+                    cards[card_id]['leader_skill_id']).description.replace('\n', ' ')
 
             except:
                 config.Model.set_connection_resolver(config.db_jp)
-                leader_skill_name = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).name.replace('\n',' ')
-                leader_skill_desc = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).description.replace('\n',' ')
+                leader_skill_name = config.LeaderSkills.find_or_fail(cards[card_id]['leader_skill_id']).name.replace(
+                    '\n', ' ')
+                leader_skill_desc = config.LeaderSkills.find_or_fail(
+                    cards[card_id]['leader_skill_id']).description.replace('\n', ' ')
 
             # Retrieve passive skill
             if cards[card_id]['passive_skill_id'] == None:
@@ -4929,14 +4203,17 @@ def list_cards():
             else:
                 try:
                     config.Model.set_connection_resolver(config.db_glb)
-                    passive_skill_name = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).name.replace('\n',' ')
-                    passive_skill_desc = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).description.replace('\n',' ')
+                    passive_skill_name = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).name.replace(
+                        '\n', ' ')
+                    passive_skill_desc = config.Passives.find_or_fail(
+                        cards[card_id]['passive_skill_id']).description.replace('\n', ' ')
 
                 except:
                     config.Model.set_connection_resolver(config.db_jp)
-                    passive_skill_name = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).name.replace('\n',' ')
-                    passive_skill_desc = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).description.replace('\n',' ')
-
+                    passive_skill_name = config.Passives.find_or_fail(cards[card_id]['passive_skill_id']).name.replace(
+                        '\n', ' ')
+                    passive_skill_desc = config.Passives.find_or_fail(
+                        cards[card_id]['passive_skill_id']).description.replace('\n', ' ')
 
             # Retrieve link skills from DB
             ls1 = None
@@ -4947,72 +4224,72 @@ def list_cards():
             ls6 = None
             ls7 = None
 
-
             try:
                 config.Model.set_connection_resolver(config.db_glb)
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]) != None:
-                    ls1 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]).name.replace('\n',' ')
+                    ls1 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]) != None:
-                    ls2 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]).name.replace('\n',' ')
+                    ls2 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]) != None:
-                    ls3 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]).name.replace('\n',' ')
+                    ls3 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]) != None:
-                    ls4 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]).name.replace('\n',' ')
+                    ls4 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]) != None:
-                    ls5 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]).name.replace('\n',' ')
+                    ls5 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]).name.replace('\n', ' ')
                 else:
                     ls5 = 'Link Skill'
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]) != None:
-                    ls6 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]).name.replace('\n',' ')
+                    ls6 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]).name.replace('\n', ' ')
                 else:
                     ls6 = 'Link Skill'
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]) != None:
-                    ls7 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]).name.replace('\n',' ')
+                    ls7 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]).name.replace('\n', ' ')
                 else:
                     ls7 = 'Link Skill'
             except:
                 config.Model.set_connection_resolver(config.db_jp)
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]) != None:
-                    ls1 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]).name.replace('\n',' ')
+                    ls1 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][0]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]) != None:
-                    ls2 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]).name.replace('\n',' ')
+                    ls2 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][1]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]) != None:
-                    ls3 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]).name.replace('\n',' ')
+                    ls3 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][2]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]) != None:
-                    ls4 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]).name.replace('\n',' ')
+                    ls4 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][3]).name.replace('\n', ' ')
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]) != None:
-                    ls5 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]).name.replace('\n',' ')
+                    ls5 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][4]).name.replace('\n', ' ')
                 else:
                     ls5 = 'Link Skill'
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]) != None:
-                    ls6 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]).name.replace('\n',' ')
+                    ls6 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][5]).name.replace('\n', ' ')
                 else:
                     ls6 = 'Link Skill'
                 if config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]) != None:
-                    ls7 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]).name.replace('\n',' ')
+                    ls7 = config.LinkSkills.find(cards[card_id]['link_skill_ids'][6]).name.replace('\n', ' ')
                 else:
                     ls7 = 'Link Skill'
 
-            window.FindElement('NAME').Update(value = cards[card_id]['name'].replace('\n',' '))
-            window.FindElement('TYPE').Update(value = '['+cards[card_id]['type']+']',text_color = colour)
-            window.FindElement('COST').Update(value = 'COST: ' + str(cards[card_id]['cost']))
-            window.FindElement('LEADERSKILLNAME').Update(value = leader_skill_name)
-            window.FindElement('LEADERSKILLDESC').Update(value = leader_skill_desc)
-            window.FindElement('PASSIVESKILLNAME').Update(value = passive_skill_name)
-            window.FindElement('PASSIVESKILLDESC').Update(value = passive_skill_desc)
-            window.FindElement('LINKSKILL1').Update(value = ls1)
-            window.FindElement('LINKSKILL2').Update(value = ls2)
-            window.FindElement('LINKSKILL3').Update(value = ls3)
-            window.FindElement('LINKSKILL4').Update(value = ls4)
-            window.FindElement('LINKSKILL5').Update(value = ls5)
-            window.FindElement('LINKSKILL6').Update(value = ls6)
-            window.FindElement('LINKSKILL7').Update(value = ls7)
+            window.FindElement('NAME').Update(value=cards[card_id]['name'].replace('\n', ' '))
+            window.FindElement('TYPE').Update(value='[' + cards[card_id]['type'] + ']', text_color=colour)
+            window.FindElement('COST').Update(value='COST: ' + str(cards[card_id]['cost']))
+            window.FindElement('LEADERSKILLNAME').Update(value=leader_skill_name)
+            window.FindElement('LEADERSKILLDESC').Update(value=leader_skill_desc)
+            window.FindElement('PASSIVESKILLNAME').Update(value=passive_skill_name)
+            window.FindElement('PASSIVESKILLDESC').Update(value=passive_skill_desc)
+            window.FindElement('LINKSKILL1').Update(value=ls1)
+            window.FindElement('LINKSKILL2').Update(value=ls2)
+            window.FindElement('LINKSKILL3').Update(value=ls3)
+            window.FindElement('LINKSKILL4').Update(value=ls4)
+            window.FindElement('LINKSKILL5').Update(value=ls5)
+            window.FindElement('LINKSKILL6').Update(value=ls6)
+            window.FindElement('LINKSKILL7').Update(value=ls7)
+
 
 ####################################################################
 def sell_medals():
     # Get Medals
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
         'Accept': '*/*',
         'Authorization': packet.mac('GET', '/awakening_items'),
         'Content-type': 'application/json',
@@ -5021,7 +4298,7 @@ def sell_medals():
         'X-AssetVersion': '////',
         'X-DatabaseVersion': '////',
         'X-ClientVersion': '////',
-        }
+    }
     if config.client == 'global':
         config.Model.set_connection_resolver(config.db_glb)
         url = 'https://ishin-global.aktsk.com/awakening_items'
@@ -5029,7 +4306,7 @@ def sell_medals():
         config.Model.set_connection_resolver(config.db_jp)
         url = 'http://ishin-production.aktsk.jp/awakening_items'
     r = requests.get(url, headers=headers)
-    
+
     # Create list with ID for listbox
     medal_list = []
     for medal in reversed(r.json()['awakening_items']):
@@ -5040,21 +4317,21 @@ def sell_medals():
             config.Model.set_connection_resolver(config.db_jp)
             item = config.Medal.find_or_fail(int(medal['awakening_item_id']))
 
-        medal_list.append(item.name +' [x'+str(medal['quantity']) + '] | ' + str(item.id))
+        medal_list.append(item.name + ' [x' + str(medal['quantity']) + '] | ' + str(item.id))
 
     layout = [[sg.Text('Select a medal-')],
-              [sg.Listbox(values=(medal_list),size = (30,15),key = 'medal_tally',font = ('',15,'bold'))],
-              [sg.Text('Amount'),sg.Spin([i for i in range(1,999)], initial_value=1, size=(5, None))],
-              [sg.Button(button_text = 'Sell',key='Medal')]]
+              [sg.Listbox(values=(medal_list), size=(30, 15), key='medal_tally', font=('', 15, 'bold'))],
+              [sg.Text('Amount'), sg.Spin([i for i in range(1, 999)], initial_value=1, size=(5, None))],
+              [sg.Button(button_text='Sell', key='Medal')]]
 
-    window = sg.Window('Medal List',keep_on_top = True).Layout(layout)
+    window = sg.Window('Medal List', keep_on_top=True).Layout(layout)
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
 
         if event == None:
             window.Close()
             return 0
-        
+
         # Check if medal selected and sell
         if event == 'Medal':
             if len(values['medal_tally']) == 0:
@@ -5064,10 +4341,10 @@ def sell_medals():
             value = values['medal_tally'][0]
             medal = value.split(' | ')
             medalo = medal[1]
-            amount = values[0]    
+            amount = values[0]
 
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                 'Accept': '*/*',
                 'Authorization': packet.mac('POST', '/awakening_items/exchange'),
                 'Content-type': 'application/json',
@@ -5075,12 +4352,12 @@ def sell_medals():
                 'X-AssetVersion': '////',
                 'X-DatabaseVersion': '////',
                 'X-ClientVersion': '////',
-                }
+            }
             if config.client == 'global':
                 url = 'https://ishin-global.aktsk.com/awakening_items/exchange'
             else:
                 url = 'http://ishin-production.aktsk.jp/awakening_items/exchange'
-            
+
             medal_id = int(medalo)
             chunk = int(amount) // 99
             remainder = int(amount) % 99
@@ -5091,7 +4368,7 @@ def sell_medals():
                 data = {'awakening_item_id': medal_id, 'quantity': 99}
                 r = requests.post(url, data=json.dumps(data), headers=headers)
                 if 'error' in r.json():
-                    print(Fore.RED+Style.BRIGHT+str(r.json))
+                    print(Fore.RED + Style.BRIGHT + str(r.json))
                 else:
                     print(Fore.GREEN + Style.BRIGHT + 'Sold Medals x' + str(99))
 
@@ -5099,13 +4376,13 @@ def sell_medals():
                 data = {'awakening_item_id': medal_id, 'quantity': remainder}
                 r = requests.post(url, data=json.dumps(data), headers=headers)
                 if 'error' in r.json():
-                    print(Fore.RED+Style.BRIGHT+str(r.json))
+                    print(Fore.RED + Style.BRIGHT + str(r.json))
                 else:
                     print(Fore.GREEN + Style.BRIGHT + 'Sold Medals x' + str(remainder))
 
-            # New medal list 
+            # New medal list
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                 'Accept': '*/*',
                 'Authorization': packet.mac('GET', '/awakening_items'),
                 'Content-type': 'application/json',
@@ -5114,7 +4391,7 @@ def sell_medals():
                 'X-AssetVersion': '////',
                 'X-DatabaseVersion': '////',
                 'X-ClientVersion': '////',
-                }
+            }
             if config.client == 'global':
                 url = 'https://ishin-global.aktsk.com/awakening_items'
             else:
@@ -5130,24 +4407,26 @@ def sell_medals():
                     config.Model.set_connection_resolver(config.db_jp)
                     item = config.Medal.find_or_fail(int(medal['awakening_item_id']))
 
-                medal_list.append(item.name +' [x'+str(medal['quantity'])+']' + ' | ' + str(item.id))
-            
-            window.FindElement('medal_tally').Update(values = medal_list)
+                medal_list.append(item.name + ' [x' + str(medal['quantity']) + ']' + ' | ' + str(item.id))
+
+            window.FindElement('medal_tally').Update(values=medal_list)
             window.UnHide()
             window.Refresh()
+
+
 ####################################################################
-def complete_zbattle_stage(kagi = False):
+def complete_zbattle_stage(kagi=False):
     headers = {
-            'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
-            'Accept': '*/*',
-            'Authorization': packet.mac('GET', '/events'),
-            'Content-type': 'application/json',
-            'X-Language': 'en',
-            'X-Platform': config.platform,
-            'X-AssetVersion': '////',
-            'X-DatabaseVersion': '////',
-            'X-ClientVersion': '////',
-            }
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/events'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
     if config.client == 'global':
         url = 'https://ishin-global.aktsk.com/events'
     else:
@@ -5159,31 +4438,34 @@ def complete_zbattle_stage(kagi = False):
     for event in events['z_battle_stages']:
         try:
             config.Model.set_connection_resolver(config.db_glb)
-            zbattle = config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name +' | '+ str(event['id'])
+            zbattle = config.ZBattles.where('z_battle_stage_id', '=', event['id']).first().enemy_name + ' | ' + str(
+                event['id'])
         except:
             config.Model.set_connection_resolver(config.db_jp)
-            zbattle = config.ZBattles.where('z_battle_stage_id','=',event['id']).first().enemy_name +' | '+ str(event['id'])
+            zbattle = config.ZBattles.where('z_battle_stage_id', '=', event['id']).first().enemy_name + ' | ' + str(
+                event['id'])
         zbattles_to_display.append(zbattle)
 
-    col1 = [[sg.Text('Select a Z-Battle',font = ('',15,'bold'))],
-            [sg.Listbox(values=(zbattles_to_display),size = (30,15),key = 'ZBATTLE',font = ('',15,'bold'))]]
+    col1 = [[sg.Text('Select a Z-Battle', font=('', 15, 'bold'))],
+            [sg.Listbox(values=(zbattles_to_display), size=(30, 15), key='ZBATTLE', font=('', 15, 'bold'))]]
 
-    col2 = [[sg.Text('Select Single Stage:'),sg.Combo(['5','10','15','20','25','30'],size=(6,3),key = 'LEVEL')],
-            [sg.Text('Amount of times: '),sg.Spin([i for i in range(1,999)], initial_value=1, size=(5, None),key = 'LOOP')],
-            [sg.Button(button_text = 'Go!',key='GO')]]
+    col2 = [[sg.Text('Select Single Stage:'), sg.Combo(['5', '10', '15', '20', '25', '30'], size=(6, 3), key='LEVEL')],
+            [sg.Text('Amount of times: '),
+             sg.Spin([i for i in range(1, 999)], initial_value=1, size=(5, None), key='LOOP')],
+            [sg.Button(button_text='Go!', key='GO')]]
 
-    layout = [[sg.Column(col1),sg.Column(col2)]]
+    layout = [[sg.Column(col1), sg.Column(col2)]]
     window = sg.Window('Medal List').Layout(layout)
 
     while True:
-        event,values = window.Read()
+        event, values = window.Read()
         if event == None:
             window.Close()
             return 0
 
         if event == 'GO':
             if len(values['ZBATTLE']) == 0:
-                print(Fore.RED+Style.BRIGHT+"Select a Z-Battle!")
+                print(Fore.RED + Style.BRIGHT + "Select a Z-Battle!")
                 continue
 
             for i in range(int(values['LOOP'])):
@@ -5195,65 +4477,64 @@ def complete_zbattle_stage(kagi = False):
 
                 ##Get supporters
                 headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                     'Accept': '*/*',
-                    'Authorization': packet.mac('GET', '/z_battles/'+str(stage)+'/supporters'),
+                    'Authorization': packet.mac('GET', '/z_battles/' + str(stage) + '/supporters'),
                     'Content-type': 'application/json',
                     'X-Platform': config.platform,
                     'X-AssetVersion': '////',
                     'X-DatabaseVersion': '////',
                     'X-ClientVersion': '////',
-                    }
+                }
                 if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(stage)+'/supporters'
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(stage) + '/supporters'
                 else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(stage)+'/supporters'   
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(stage) + '/supporters'
                 r = requests.get(url, headers=headers)
                 if 'supporters' in r.json():
                     supporter = r.json()['supporters'][0]['id']
                 elif 'error' in r.json():
-                    print(Fore.RED + Style.BRIGHT+r.json())
+                    print(Fore.RED + Style.BRIGHT + r.json())
                     return 0
                 else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
+                    print(Fore.RED + Style.BRIGHT + 'Problem with ZBattle')
                     print(r.raw())
                     return 0
 
                 ###Send first request
                 headers = {
-                    'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+                    'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
                     'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(stage)+'/start'),
+                    'Authorization': packet.mac('POST', '/z_battles/' + str(stage) + '/start'),
                     'Content-type': 'application/json',
                     'X-Platform': config.platform,
                     'X-AssetVersion': '////',
                     'X-DatabaseVersion': '////',
                     'X-ClientVersion': '////',
-                    }
-
+                }
 
                 if kagi == True:
                     sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': int(level),
-                            'selected_team_num': config.deck,
-                            'eventkagi_item_id': 5
-                            })
+                        'friend_id': supporter,
+                        'level': int(level),
+                        'selected_team_num': config.deck,
+                        'eventkagi_item_id': 5
+                    })
                 else:
                     sign = json.dumps({
-                            'friend_id': supporter,
-                            'level': int(level),
-                            'selected_team_num': config.deck,
-                            })
-                
+                        'friend_id': supporter,
+                        'level': int(level),
+                        'selected_team_num': config.deck,
+                    })
+
                 enc_sign = packet.encrypt_sign(sign)
                 data = {'sign': enc_sign}
                 if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(stage)+'/start'
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(stage) + '/start'
                 else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(stage)+'/start'
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(stage) + '/start'
                 r = requests.post(url, data=json.dumps(data), headers=headers)
-                
+
                 if 'sign' in r.json():
                     dec_sign = packet.decrypt_sign(r.json()['sign'])
                 # Check if error was due to lack of stamina
@@ -5263,16 +4544,16 @@ def complete_zbattle_stage(kagi = False):
                         if config.allow_stamina_refill == True:
                             refill_stamina()
                             r = requests.post(url, data=json.dumps(data),
-                                    headers=headers)
-                    else:  
+                                              headers=headers)
+                    else:
                         print(r.json())
                         return 0
                 else:
-                    print(Fore.RED + Style.BRIGHT+'Problem with ZBattle')
+                    print(Fore.RED + Style.BRIGHT + 'Problem with ZBattle')
                     print(r.raw())
                     return 0
 
-                finish_time = int(round(time.time(), 0)+2000)
+                finish_time = int(round(time.time(), 0) + 2000)
                 start_time = finish_time - randint(6200000, 8200000)
 
                 data = {
@@ -5285,28 +4566,28 @@ def complete_zbattle_stage(kagi = False):
                     'used_items': [],
                     'z_battle_finished_at_ms': finish_time,
                     'z_battle_started_at_ms': start_time,
-                    }
-                #enc_sign = encrypt_sign(sign)
+                }
+                # enc_sign = encrypt_sign(sign)
 
                 headers = {
                     'User-Agent': 'Android',
                     'Accept': '*/*',
-                    'Authorization': packet.mac('POST', '/z_battles/'+str(stage)+'/finish'),
+                    'Authorization': packet.mac('POST', '/z_battles/' + str(stage) + '/finish'),
                     'Content-type': 'application/json',
                     'X-Platform': config.platform,
                     'X-AssetVersion': '////',
                     'X-DatabaseVersion': '////',
                     'X-ClientVersion': '////',
-                    }
+                }
                 if config.client == 'global':
-                    url = 'https://ishin-global.aktsk.com/z_battles/'+str(stage)+'/finish'
+                    url = 'https://ishin-global.aktsk.com/z_battles/' + str(stage) + '/finish'
                 else:
-                    url = 'http://ishin-production.aktsk.jp/z_battles/'+str(stage)+'/finish'   
-                
+                    url = 'http://ishin-production.aktsk.jp/z_battles/' + str(stage) + '/finish'
+
                 r = requests.post(url, data=json.dumps(data), headers=headers)
                 dec_sign = packet.decrypt_sign(r.json()['sign'])
                 # ## Print out Items from Database
-                print('Level: '+str(level))
+                print('Level: ' + str(level))
                 # ## Print out Items from Database
                 if 'items' in dec_sign:
                     supportitems = []
@@ -5394,8 +4675,8 @@ def complete_zbattle_stage(kagi = False):
                             config.Model.set_connection_resolver(config.db_jp)
 
                         # Print name and item count
-                        print(Fore.CYAN + Style.BRIGHT+ config.SupportItems.find(x).name + ' x' \
-                            + str(supportitems.count(x)))
+                        print(Fore.CYAN + Style.BRIGHT + config.SupportItems.find(x).name + ' x' \
+                              + str(supportitems.count(x)))
                     for x in awakeningitemsset:
                         # JP Translation
                         try:
@@ -5405,8 +4686,8 @@ def complete_zbattle_stage(kagi = False):
                             config.Model.set_connection_resolver(config.db_jp)
 
                         # Print name and item count
-                        print(Fore.MAGENTA + Style.BRIGHT  + config.AwakeningItems.find(x).name + ' x' \
-                            + str(awakeningitems.count(x)))
+                        print(Fore.MAGENTA + Style.BRIGHT + config.AwakeningItems.find(x).name + ' x' \
+                              + str(awakeningitems.count(x)))
                     for x in trainingitemsset:
                         # JP Translation
                         try:
@@ -5417,7 +4698,7 @@ def complete_zbattle_stage(kagi = False):
 
                         # Print name and item count
                         print(Fore.RED + Style.BRIGHT + config.TrainingItems.find(x).name + ' x' \
-                            + str(trainingitems.count(x)))
+                              + str(trainingitems.count(x)))
                     for x in potentialitemsset:
                         # JP Translation
                         try:
@@ -5428,7 +4709,7 @@ def complete_zbattle_stage(kagi = False):
 
                         # Print name and item count
                         print(config.PotentialItems.find_or_fail(x).name + ' x' \
-                            + str(potentialitems.count(x)))
+                              + str(potentialitems.count(x)))
                     for x in treasureitemsset:
                         # JP Translation
                         try:
@@ -5439,7 +4720,7 @@ def complete_zbattle_stage(kagi = False):
 
                         # Print name and item count
                         print(Fore.GREEN + Style.BRIGHT + config.TreasureItems.find(x).name + ' x' \
-                            + str(treasureitems.count(x)))
+                              + str(treasureitems.count(x)))
                     for x in trainingfieldsset:
                         # JP Translation
                         try:
@@ -5450,7 +4731,7 @@ def complete_zbattle_stage(kagi = False):
 
                         # Print name and item count
                         print(config.TrainingFields.find(x).name + ' x' \
-                            + str(trainingfields.count(x)))
+                              + str(trainingfields.count(x)))
                     for x in carditemsset:
                         # JP Translation
                         try:
@@ -5469,7 +4750,447 @@ def complete_zbattle_stage(kagi = False):
                 print('##############################################')
             window.UnHide()
             window.Refresh()
+
+
 ####################################################################
+def bulk_daily_logins():
+    layout = [[sg.Text('Choose what gets completed!')],
+              [sg.Checkbox('Daily Login', default=True)],
+              [sg.Checkbox('Accept Gifts')],
+              [sg.Checkbox('Complete Daily Events')],
+              [sg.Text('Enter command to execute:')],
+              [sg.Input(key='user_input')],
+              [sg.Ok()]]
+
+    window = sg.Window('Daily Logins', keep_on_top=True).Layout(layout)
+    event, values = window.Read()
+    window.Close()
+    if event == None:
+        return 0
+
+    login = values[0]
+    gift = values[1]
+    daily_events = values[2]
+    user_input = values['user_input']
+    print(user_input)
+
+    # Fetch saves to choose from
+    files = []
+    for subdir, dirs, os_files in os.walk("Saves"):
+        for file in sorted(os_files):
+            files.append(subdir + os.sep + file)
+
+    ### Create window that manages saves selections
+    # Layout
+    chosen_files = []
+    column1 = [
+        [sg.Listbox(values=(files), size=(30, None), bind_return_key=True, select_mode='multiple', key='select_save')],
+        [sg.Button(button_text='Select All', key='all')]]
+    column2 = [[sg.Listbox(values=(chosen_files), size=(30, None), bind_return_key=True, select_mode='multiple',
+                           key='remove_save')],
+               [sg.Button(button_text='Remove All', key='remove_all')]]
+    layout = [[sg.Column(column1), sg.Column(column2)],
+              [sg.Button(button_text='Start Grind!', key='Done')]]
+    window = sg.Window('Saves', keep_on_top=True, font=('Helvetica', 15)).Layout(layout)
+
+    while event != 'Done':
+        event, value = window.Read()
+        if event == 'select_save':
+            chosen_files.extend(value['select_save'])
+            for save in value['select_save']:
+                files.remove(save)
+
+        if event == 'remove_save':
+            files.extend(value['remove_save'])
+            for save in value['remove_save']:
+                chosen_files.remove(save)
+
+        if event == 'all':
+            chosen_files.extend(files)
+            files[:] = []
+
+        if event == 'remove_all':
+            files.extend(chosen_files)
+            chosen_files[:] = []
+
+        if event == None:
+            print(Fore.RED + Style.BRIGHT + 'User terminated daily logins')
+            return 0
+
+        window.FindElement('select_save').Update(values=sorted(files))
+        window.FindElement('remove_save').Update(values=sorted(chosen_files))
+
+    window.Close()
+
+    ### Execution per file
+    for file in chosen_files:
+        bulk_daily_save_processor(file, login, gift, daily_events, user_input)
+
+
+####################################################################
+def bulk_daily_save_processor(save, login, gift, daily_events, user_input):
+    f = open(os.path.join(save), 'r')
+    config.identifier = f.readline().rstrip()
+    config.AdId = f.readline().rstrip()
+    config.UniqueId = f.readline().rstrip()
+    config.platform = f.readline().rstrip()
+    config.client = f.readline().rstrip()
+    f.close()
+
+    try:
+        refresh_client()
+    except:
+        print('Sign in failed' + save + ".txt")
+        return 0
+
+    ###
+    if login == True:
+        daily_login()
+    if gift == True:
+        accept_gifts()
+    if daily_events == True:
+        complete_stage('130001', 0)
+        complete_stage('131001', 0)
+        complete_stage('132001', 0)
+        complete_potential()
+        accept_gifts()
+        accept_missions()
+        print('Completed Daily Grind')
+    while len(user_input) > 1:
+        user_command_executor(user_input)
+        try:
+            user_input = input()
+        except:
+            sys.stdin = sys.__stdin__
+            break
+            user_input = input()
+
+
+##############################################################################
+def fresh_save_account():
+    if not os.path.isdir("Saves"):
+        try:
+            os.mkdir('Saves')
+            os.mkdir('Saves/ios')
+            os.mkdir('Saves/android')
+            os.mkdir('Saves/Jp')
+            os.mkdir('Saves/Jp/ios')
+            os.mkdir('Saves/Jp/android')
+            os.mkdir('Saves/fresh')
+            os.mkdir('Saves/fresh/ios')
+            os.mkdir('Saves/fresh/android')
+        except:
+            print(Fore.RED + Style.BRIGHT + 'Unable to create saves file')
+            return 0
+
+    valid_save = False
+    while valid_save == False:
+        save_name = input("What would you like to name the file?")
+        while save_name.isalnum() == 0:
+            print(Fore.RED + Style.BRIGHT + "Name not allowed!")
+            save_name = input('What would you like to name this save?: ')
+        if os.path.exists('Saves' + os.sep + config.platform + os.sep + save_name + ".txt"):
+            print(Fore.RED + Style.BRIGHT + "File by that name already exists.")
+        else:
+            try:
+                f = open(os.path.join('Saves/fresh' + os.sep + config.platform + os.sep + save_name + ".txt"), 'w')
+                f.write(str(config.identifier) + '\n')
+                f.write(str(config.AdId) + '\n')
+                f.write(str(config.UniqueId) + '\n')
+                f.write(str(config.platform) + '\n')
+                f.write(str(config.client) + '\n')
+                f.close()
+                print('--------------------------------------------')
+                print(Fore.CYAN + Style.BRIGHT + 'Written details to file: ' + save_name)
+                print(Fore.RED + Style.BRIGHT + 'If ' + save_name + ' is deleted your account will be lost!')
+                print('--------------------------------------------')
+                break
+            except Exception as e:
+                print(e)
+
+
+######################################################################################
+def fresh_load_account():
+    while 1 == 1:
+        print(
+            'Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ')',end='')
+        platform = input('')
+        if platform[0].lower() in ['1', '2']:
+            if platform[0].lower() == '1':
+                config.platform = 'android'
+            else:
+                config.platform = 'ios'
+            break
+        else:
+            print(Fore.RED + 'Could not identify correct operating system to use.')
+
+    while 1 == 1:
+        save_name = input("What save would you like to load?: ")
+        if os.path.isfile('Saves/fresh' + os.sep + config.platform + os.sep + save_name + ".txt"):
+            try:
+                f = open(os.path.join('Saves/fresh', config.platform, save_name + ".txt"), 'r')
+                config.identifier = f.readline().rstrip()
+                config.AdId = f.readline().rstrip()
+                config.UniqueId = f.readline().rstrip()
+                config.platform = f.readline().rstrip()
+                client = f.readline().rstrip()
+                if config.client == client:
+                    break
+                else:
+                    print(Fore.RED + Style.BRIGHT + 'Save does not match client version.')
+
+            except Exception as e:
+                print(e)
+
+        else:
+            print(Fore.RED + Style.BRIGHT + "Could not find " + save_name)
+    refresh_client()
+
+
+##########################################################################################
+def fresh_bulk_daily_logins():
+    layout = [[sg.Text('Choose what gets completed!')],
+              [sg.Checkbox('Daily Login', default=True)],
+              [sg.Checkbox('Accept Gifts')],
+              [sg.Checkbox('Complete Daily Events')],
+              [sg.Text('Enter command to execute:')],
+              [sg.Input(key='user_input')],
+              [sg.Ok()]]
+
+    window = sg.Window('Daily Logins', keep_on_top=True).Layout(layout)
+    event, values = window.Read()
+    window.Close()
+    if event == None:
+        return 0
+
+    login = values[0]
+    gift = values[1]
+    daily_events = values[2]
+    user_input = values['user_input']
+    print(user_input)
+
+    # Fetch saves to choose from
+    files = []
+    for subdir, dirs, os_files in os.walk("Saves/fresh"):
+        for file in sorted(os_files):
+            files.append(subdir + os.sep + file)
+
+    ### Create window that manages saves selections
+    # Layout
+    chosen_files = []
+    column1 = [
+        [sg.Listbox(values=(files), size=(30, None), bind_return_key=True, select_mode='multiple', key='select_save')],
+        [sg.Button(button_text='Select All', key='all')]]
+    column2 = [[sg.Listbox(values=(chosen_files), size=(30, None), bind_return_key=True, select_mode='multiple',
+                           key='remove_save')],
+               [sg.Button(button_text='Remove All', key='remove_all')]]
+    layout = [[sg.Column(column1), sg.Column(column2)],
+              [sg.Button(button_text='Start Grind!', key='Done')]]
+    window = sg.Window('Saves/fresh', keep_on_top=True, font=('Helvetica', 15)).Layout(layout)
+
+    while event != 'Done':
+        event, value = window.Read()
+        if event == 'select_save':
+            chosen_files.extend(value['select_save'])
+            for save in value['select_save']:
+                files.remove(save)
+
+        if event == 'remove_save':
+            files.extend(value['remove_save'])
+            for save in value['remove_save']:
+                chosen_files.remove(save)
+
+        if event == 'all':
+            chosen_files.extend(files)
+            files[:] = []
+
+        if event == 'remove_all':
+            files.extend(chosen_files)
+            chosen_files[:] = []
+
+        if event == None:
+            print(Fore.RED + Style.BRIGHT + 'User terminated daily logins')
+            return 0
+
+        window.FindElement('select_save').Update(values=sorted(files))
+        window.FindElement('remove_save').Update(values=sorted(chosen_files))
+
+    window.Close()
+
+    for file in chosen_files:
+        bulk_daily_save_processor(file, login, gift, daily_events, user_input)
+
+
+########################################################################################################################
+def dokkan():
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/events'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/events'
+    else:
+        url = 'http://ishin-production.aktsk.jp/events'
+    r = requests.get(url, headers=headers)
+    events = r.json()
+    event_ids = []
+    for event in events['events']:
+        event_ids.append(event['id'])
+    event_ids = sorted(event_ids)
+    try:
+        event_ids.remove(135)
+    except:
+        None
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/user_areas'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/user_areas'
+    else:
+        url = 'http://ishin-production.aktsk.jp/user_areas'
+    r = requests.get(url, headers=headers)
+    areas = r.json()['user_areas']
+    i = 1
+    for area in areas:
+        if area['area_id'] in event_ids:
+            for stage in area['user_sugoroku_maps']:
+                    complete_stage(str(stage['sugoroku_map_id'])[:-1], str(stage['sugoroku_map_id'])[-1])
+                    i += 1
+        if i % 30 == 0:
+            refresh_client()
+
+
+class letter():
+    # Each letter has a lowercase character, an uppercase character, and
+    # identifiers as vowel or consonant.
+    def __init__(self, lowerchar, upperchar, is_vowel, is_consonant):
+        self.upperchar = upperchar
+        self.lowerchar = lowerchar
+        self.is_vowel = is_vowel
+        self.is_consonant = is_consonant
+
+
+global alphabet
+alphabet = [letter('a', 'A', True, False),
+            letter('b', 'B', False, True),
+            letter('c', 'C', False, True),
+            letter('d', 'D', False, True),
+            letter('e', 'E', True, False),
+            letter('f', 'F', False, True),
+            letter('g', 'G', False, True),
+            letter('h', 'H', False, True),
+            letter('i', 'I', True, False),
+            letter('j', 'J', False, True),
+            letter('k', 'K', False, True),
+            letter('l', 'L', False, True),
+            letter('m', 'M', False, True),
+            letter('n', 'N', False, True),
+            letter('o', 'O', True, False),
+            letter('p', 'P', False, True),
+            letter('q', 'Q', False, True),
+            letter('r', 'R', False, True),
+            letter('s', 'S', False, True),
+            letter('t', 'T', False, True),
+            letter('u', 'U', True, False),
+            letter('v', 'V', False, True),
+            letter('w', 'W', False, True),
+            letter('x', 'X', False, True),
+            letter('y', 'Y', True, True),
+            letter('z', 'Z', False, True)
+            ]
+
+
+def rand_int(x1, x2):
+    # Generate a random integer number between x1 and x2, inclusive.
+    r = int(int(x1) + random() * (int(x2) - int(x1)))
+    return r
+
+
+def make_name():
+    # Determine name length.
+    lmin = 3  # Minimum length.
+    lmax = 3  # Maximum length.
+    name_length = rand_int(lmin, lmax)
+
+    # Initialize string.
+    my_name = ""
+
+    prev_vowel = False  # Was the previous letter a vowel?
+    prev_consonant = False  # Was the previous letter a consonant?
+    prev2_vowel = False  # Were the previous 2 letters vowels?
+    prev2_consonant = False  # Were the previous 2 letters consonants?
+
+    # Generate letters for name.
+    for i in range(0, name_length):
+        a = get_letter(prev2_vowel, prev2_consonant)
+        if (i == 0):
+            my_name = my_name + a.upperchar
+        else:
+            my_name = my_name + a.lowerchar
+        prev2_vowel = (a.is_vowel and prev_vowel)
+        prev2_consonant = (a.is_consonant and prev_consonant)
+        prev_vowel = a.is_vowel
+        prev_consonant = a.is_consonant
+
+    return my_name
+
+
+def get_letter(need_consonant, need_vowel):
+    global alphabet
+    # Generate a random letter.
+    done = False
+    while (not done):
+        a = alphabet[rand_int(0, 25)]
+        if ((need_consonant and a.is_vowel) or (need_vowel and a.is_consonant)):
+            done = False
+        else:
+            done = True
+    return a
+
+
+def complete_sbr():
+    print('------------------------------------')
+    while True:
+        print(Fore.CYAN + Style.BRIGHT + 'SBR ')
+        print('---------------------------------')
+        print('---------------------------------')
+        print(Fore.CYAN + Style.BRIGHT + '1-10 :' + Fore.YELLOW + Style.BRIGHT + ' 0')
+        print('---------------------------------')
+        print(Fore.CYAN + Style.BRIGHT + '11-20 :' + Fore.YELLOW + Style.BRIGHT + ' 1')
+        print('---------------------------------')
+        print(Fore.CYAN + Style.BRIGHT + '21-30 :' + Fore.YELLOW + Style.BRIGHT + ' 2')
+        command = input('Enter your choice: ')
+        if command == '0':
+            print(' ')
+            extra.complete_sbr()
+            break
+        elif command == '1':
+            print(' ')
+            extra.sbr_next()
+            break
+        elif command == '2':
+            print(' ')
+            extra.sbr_new()
+
+
+
 def potara():
     print('---------------------------------')
     print(Fore.YELLOW + Style.BRIGHT + 'Clear without any Support Items')
@@ -5575,18 +5296,145 @@ def potara():
     change_team()
     complete_stage('26004', 3)
     complete_stage('26008', 3)
-####################################################################
-def bulk_daily_logins():
-    layout =  [[sg.Text('Choose what gets completed!')],
-                   [sg.Checkbox('Daily Login', default=True)],
-                   [sg.Checkbox('Accept Gifts')],
-                   [sg.Checkbox('Complete Daily Events')],
-                   [sg.Text('Enter command to execute:')],
-                   [sg.Input(key = 'user_input')],
-                   [sg.Ok()]]
-        
-    window = sg.Window('Daily Logins',keep_on_top = True).Layout(layout)
-    event,values = window.Read()
+
+
+def new_transfer():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/user'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/user'
+    else:
+        url = 'http://ishin-production.aktsk.jp/user'
+    r = requests.get(url, headers=headers)
+    user = r.json()
+    print('Name: ' + str(user['user']['name']))
+    print('Rank: ' + str(user['user']['rank']))
+    print('Account OS: ' + config.platform.upper())
+    print('User ID: ' + str(user['user']['id']))
+    get_transfer_code()
+
+
+
+def rankup():
+    #gets current level and level to reach
+    reachlv = input('\n\nAt what level are you trying to reach?\n')
+    ranklv = get_user()['user']['rank']
+    multiplier = input('\nWhat is the current multiplier? ')
+    #converts into exp by getting table info
+    exp_curr = config.Ranks.find(ranklv).exp_total
+    exp_reach = config.Ranks.find(reachlv).exp_total
+    exp_needed = exp_reach - exp_curr
+    # The amount of exp the last stage gives // ttc= times to complete
+    ttc = exp_needed / (float(27600) * float(multiplier))
+    ttc = round(ttc+0.999)
+    print('Exp needed= ' + str(exp_needed))
+    print('The last stage will be done' + str(ttc) + ' times.')
+    # lööps bröther
+    for i in range(int(ttc)):
+        complete_stage('27003', '3', kagi = None)
+        print(Fore.GREEN + 'Account Rank:' + str(get_user()['user']['rank']))
+
+
+#######################################################################################################################
+def Jp_save_account():
+    if not os.path.isdir("Saves"):
+        try:
+            os.mkdir('Saves')
+            os.mkdir('Saves/ios')
+            os.mkdir('Saves/android')
+            os.mkdir('Saves/Jp')
+            os.mkdir('Saves/Jp/ios')
+            os.mkdir('Saves/Jp/android')
+            os.mkdir('Saves/fresh')
+            os.mkdir('Saves/fresh/ios')
+            os.mkdir('Saves/fresh/android')
+        except:
+            print(Fore.RED + Style.BRIGHT + 'Unable to create saves file')
+            return 0
+
+    valid_save = False
+    while valid_save == False:
+        save_name = input("What would you like to name the file?")
+        while save_name.isalnum() == 0:
+            print(Fore.RED + Style.BRIGHT + "Name not allowed!")
+            save_name = input('What would you like to name this save?: ')
+        if os.path.exists('Saves/Jp' + os.sep + config.platform + os.sep + save_name + ".txt"):
+            print(Fore.RED + Style.BRIGHT + "File by that name already exists.")
+        else:
+            try:
+                f = open(os.path.join('Saves/Jp' + os.sep + config.platform + os.sep + save_name + ".txt"), 'w')
+                f.write(str(config.identifier) + '\n')
+                f.write(str(config.AdId) + '\n')
+                f.write(str(config.UniqueId) + '\n')
+                f.write(str(config.platform) + '\n')
+                f.write(str(config.client) + '\n')
+                f.close()
+                print('--------------------------------------------')
+                print(Fore.CYAN + Style.BRIGHT + 'Written details to file: ' + save_name + ".txt")
+                print(Fore.RED + Style.BRIGHT + 'If ' + save_name + ' is deleted your account will be lost!')
+                print('--------------------------------------------')
+                break
+            except Exception as e:
+                print(e)
+
+
+def Jp_load_account():
+    while 1 == 1:
+        print(
+            'Choose your operating system (' + Fore.YELLOW + Style.BRIGHT + 'Android: 1' + Style.RESET_ALL + ' or' + Fore.YELLOW + Style.BRIGHT + ' IOS: 2' + Style.RESET_ALL + ')',end='')
+        platform = input('')
+        if platform[0].lower() in ['1', '2']:
+            if platform[0].lower() == '1':
+                config.platform = 'android'
+            else:
+                config.platform = 'ios'
+            break
+        else:
+            print(Fore.RED + 'Could not identify correct operating system to use.')
+
+    while 1 == 1:
+        save_name = input("What save would you like to load?: ")
+        if os.path.isfile('Saves/Jp' + os.sep + config.platform + os.sep + save_name + ".txt"):
+            try:
+                f = open(os.path.join('Saves/Jp', config.platform, save_name + ".txt"), 'r')
+                config.identifier = f.readline().rstrip()
+                config.AdId = f.readline().rstrip()
+                config.UniqueId = f.readline().rstrip()
+                config.platform = f.readline().rstrip()
+                client = f.readline().rstrip()
+                if config.client == client:
+                    break
+                else:
+                    print(Fore.RED + Style.BRIGHT + 'Save does not match client version.')
+
+            except Exception as e:
+                print(e)
+
+        else:
+            print(Fore.RED + Style.BRIGHT + "Could not find " + save_name)
+    refresh_client()
+
+
+##########################################################################################
+def Jp_bulk_daily_logins():
+    layout = [[sg.Text('Choose what gets completed!')],
+              [sg.Checkbox('Daily Login', default=True)],
+              [sg.Checkbox('Accept Gifts')],
+              [sg.Checkbox('Complete Daily Events')],
+              [sg.Text('Enter command to execute:')],
+              [sg.Input(key='user_input')],
+              [sg.Ok()]]
+
+    window = sg.Window('Daily Logins', keep_on_top=True).Layout(layout)
+    event, values = window.Read()
     window.Close()
     if event == None:
         return 0
@@ -5599,21 +5447,23 @@ def bulk_daily_logins():
 
     # Fetch saves to choose from
     files = []
-    for subdir, dirs, os_files in os.walk("Saves"):
+    for subdir, dirs, os_files in os.walk("Saves/Jp"):
         for file in sorted(os_files):
-            files.append(subdir+os.sep+file)
+            files.append(subdir + os.sep + file)
 
     ### Create window that manages saves selections
-        #Layout
+    # Layout
     chosen_files = []
-    column1 = [[sg.Listbox(values=(files),size = (30,None),bind_return_key = True,select_mode='multiple',key = 'select_save')],
-               [sg.Button(button_text = 'Select All', key = 'all')]]
-    column2 = [[sg.Listbox(values=(chosen_files),size = (30,None),bind_return_key = True,select_mode='multiple', key = 'remove_save')],
-               [sg.Button(button_text = 'Remove All', key = 'remove_all')]]
-    layout = [[sg.Column(column1),sg.Column(column2)],
-              [sg.Button(button_text = 'Start Grind!',key = 'Done')]]
-    window = sg.Window('Saves',keep_on_top = True,font = ('Helvetica',15)).Layout(layout)
-    
+    column1 = [
+        [sg.Listbox(values=(files), size=(30, None), bind_return_key=True, select_mode='multiple', key='select_save')],
+        [sg.Button(button_text='Select All', key='all')]]
+    column2 = [[sg.Listbox(values=(chosen_files), size=(30, None), bind_return_key=True, select_mode='multiple',
+                           key='remove_save')],
+               [sg.Button(button_text='Remove All', key='remove_all')]]
+    layout = [[sg.Column(column1), sg.Column(column2)],
+              [sg.Button(button_text='Start Grind!', key='Done')]]
+    window = sg.Window('Saves/fresh', keep_on_top=True, font=('Helvetica', 15)).Layout(layout)
+
     while event != 'Done':
         event, value = window.Read()
         if event == 'select_save':
@@ -5643,55 +5493,964 @@ def bulk_daily_logins():
 
     window.Close()
 
-
-    ### Execution per file
     for file in chosen_files:
-        bulk_daily_save_processor(file,login,gift,daily_events,user_input)
-        
+        bulk_daily_save_processor(file, login, gift, daily_events, user_input)
 
 
-####################################################################
-def bulk_daily_save_processor(save, login, gift, daily_events, user_input):
-    
-    f = open(os.path.join(save), 'r')
-    config.identifier = f.readline().rstrip()
-    config.AdId = f.readline().rstrip()
-    config.UniqueId = f.readline().rstrip()
-    config.platform = f.readline().rstrip()
-    config.client = f.readline().rstrip()
-    f.close()
+def Jp_transfer_account():
+    # Determine correct platform to use
+    set_platform()
 
-    try:
-        refresh_client()
-    except:
-        print('Sign in failed' + save)
-        return 0
-    
-     ### 
-    if login == True:
-        daily_login()
-    if gift == True:
-        accept_gifts()
-    if daily_events == True:
-        complete_stage('130001',0)
-        complete_stage('131001',0)
-        complete_stage('132001',0)
-        complete_potential()
-        accept_gifts()
-        accept_missions()
-        print('Completed Daily Grind')
-    while len(user_input) > 1:
-            user_command_executor(user_input)
+    transfercode = input('Enter your transfer code: ')
+
+    config.AdId = packet.guid()['AdId']
+    config.UniqueId = packet.guid()['UniqueId']
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    data = {'eternal': True, 'old_user_id': '', 'user_account': {
+        'device': 'samsung',
+        'device_model': 'SM-G930V',
+        'os_version': '6.0',
+        'platform': config.platform,
+        'unique_id': config.UniqueId,
+    }}
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/auth/link_codes/' \
+              + str(transfercode)
+    else:
+        url = 'http://ishin-production.aktsk.jp/auth/link_codes/' \
+              + str(transfercode)
+    print('URL: ' + url)
+    r = requests.put(url, data=json.dumps(data), headers=headers)
+    if 'error' in r.json():
+        print(r.json())
+    print(base64.b64decode(r.json()['identifiers']).decode('utf-8'))
+    config.identifier = base64.b64decode(r.json()['identifiers']).decode('utf-8')
+
+    Jp_save_account()
+    refresh_client()
+
+
+########################################################################################################################
+def Gt():
+    complete_stage('173001', 1)
+    complete_stage('173002', 1)
+    print('---------------------------------')
+    print(Fore.YELLOW + Style.BRIGHT + '1 Characters with Link Skill:Turtle School ')
+    change_team()
+    complete_stage('173003', 1)
+    print(Fore.YELLOW + Style.BRIGHT + '1 Characters with Link Skill:Pure Saiyan ')
+    change_team()
+    complete_stage('173004', 1)
+    print(Fore.YELLOW + Style.BRIGHT + '1 Characters with Link Skill:Super Saiyan ')
+    change_team()
+    complete_stage('173005', 1)
+    print(Fore.YELLOW + Style.BRIGHT + ' Use a team made up of only Super characters of each type in level 6 ')
+    change_team()
+    complete_stage('173006', 1)
+    print(Fore.YELLOW + Style.BRIGHT + 'Use a team made up of only characters from the "Buu Saga" category in level 7')
+    change_team()
+    complete_stage('173007', 1)
+    print(Fore.YELLOW + Style.BRIGHT + 'Only teams that include "Giru" can enter this stage.')
+    change_team()
+    complete_stage('172001', 1)
+    complete_stage('172002', 1)
+    complete_stage('172003', 1)
+    print(Fore.YELLOW + Style.BRIGHT + 'Teams that include the following characters cannot enter this stage. - Pan (GT) - Pan (GT) (Honey) - Goku (GT) & Pan (GT) & Trunks (GT)')
+    change_team()
+    complete_stage('172004', 1)
+    complete_stage('172005', 1)
+    complete_stage('172006', 1)
+    complete_stage('172007', 1)
+
+
+def get_kagi():
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 6.0; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/eventkagi_items'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+    }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/eventkagi_items'
+    else:
+        url = 'http://ishin-production.aktsk.jp/eventkagi_items'
+    r = requests.get(url, headers=headers)
+    stageid = input('\nWhich Stage do you want to complete?: ')
+    kagi_items = r.json()['eventkagi_items']
+    area_id = str(config.Quests.find(stageid).area_id)
+    area_category = config.Area.find(area_id).category
+    areatabs = config.AreaTabs.all()
+    for tab in areatabs:
+        j = json.loads(tab.area_category_ids)
+        if area_category in j['area_category_ids']:
+            kagi_id = int(tab.id)
+            print('Kagi ID: ' + str(tab.id))
+            break
+    for kagi in kagi_items:
+        if kagi['eventkagi_item_id'] == kagi_id:
+            if kagi['quantity'] > 0:
+                print('Available')
+                diff = input('\nstage difficulty?: \n')
+                times = input('\nhow many times do you want to complete?: \n')
+                for i in range(int(times)):
+                    complete_stage(stageid, diff, kagi=kagi_id)
+            else:
+                print(Fore.RED + '\nThere are not enough keys or that stage does not exist for the keys')
+                return None
+
+
+def limit_stage():
+    print(Fore.CYAN + Style.BRIGHT + 'Clear all stages with SUPER UNITS ONLY')
+    change_team()
+    complete_stage('319001', 1)
+    complete_stage('319002', 1)
+    complete_stage('319003', 1)
+    complete_stage('319004', 1)
+    complete_stage('319005', 1)
+    complete_stage('319006', 1)
+    complete_stage('319007', 1)
+    complete_stage('319008', 1)
+    print(Fore.PURPLE + Style.BRIGHT + 'Clear without PHY character')
+    change_team()
+    complete_stage('319009', 1)
+    print(Fore.YELLOW + Style.BRIGHT + 'Clear without AGL character')
+    change_team()
+    complete_stage('319010', 1)
+    print(Fore.RED + Style.BRIGHT + 'Clear without INT character')
+    change_team()
+    complete_stage('319011', 1)
+    print(Fore.GREEN + Style.BRIGHT + 'Clear without TEQ character')
+    change_team()
+    complete_stage('319012', 1)
+    print(Fore.CYAN + Style.BRIGHT + 'Clear without STR character')
+    change_team()
+    complete_stage('319013', 1)
+    print(Fore.WHITE + Style.BRIGHT + 'Clear with A CHARACTER OF EACH TYPE')
+    change_team()
+    complete_stage('319014', 2)
+    complete_stage('319015', 2)
+    complete_stage('319016', 2)
+    complete_stage('319017', 2)
+    complete_stage('319018', 2)
+    complete_stage('319019', 2)
+    complete_stage('319020', 2)
+    complete_stage('319021', 2)
+    complete_stage('319022', 2)
+    complete_stage('319023', 2)
+    complete_stage('319024', 2)
+
+    print(Fore.CYAN + Style.BRIGHT + 'Clear all stages with EXTREME UNITS ONLY')
+    change_team()
+    complete_stage('320001', 1)
+    complete_stage('320002', 1)
+    complete_stage('320003', 1)
+    complete_stage('320004', 1)
+    complete_stage('320005', 1)
+    complete_stage('320006', 1)
+    complete_stage('320007', 1)
+    complete_stage('320008', 1)
+    print(Fore.PURPLE + Style.BRIGHT + 'Clear without INT character')
+    change_team()
+    complete_stage('320009', 1)
+    print(Fore.YELLOW + Style.BRIGHT + 'Clear without PHY character')
+    change_team()
+    complete_stage('320010', 1)
+    print(Fore.RED + Style.BRIGHT + 'Clear without STR character')
+    change_team()
+    complete_stage('320011', 1)
+    print(Fore.GREEN + Style.BRIGHT + 'Clear without TEQ character')
+    change_team()
+    complete_stage('320012', 1)
+    print(Fore.CYAN + Style.BRIGHT + 'Clear without AGL character')
+    change_team()
+    complete_stage('320013', 1)
+    print(Fore.WHITE + Style.BRIGHT + 'Clear with A CHARACTER OF EACH TYPE')
+    change_team()
+    complete_stage('320014', 2)
+    complete_stage('320015', 2)
+    complete_stage('320016', 2)
+    complete_stage('320017', 2)
+    complete_stage('320018', 2)
+    complete_stage('320019', 2)
+    complete_stage('320020', 2)
+    complete_stage('320021', 2)
+    complete_stage('320022', 2)
+    complete_stage('320023', 2)
+    complete_stage('320024', 2)
+
+
+def change_supporter():
+    # Needs to have translation properly implemented!
+
+    ###Get user cards
+    print(Fore.CYAN + Style.BRIGHT + 'Fetching user cards...')
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('GET', '/cards'),
+        'Content-type': 'application/json',
+        'X-Language': 'en',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/cards'
+    else:
+        url = 'http://ishin-production.aktsk.jp/cards'
+    r = requests.get(url, headers=headers)
+    master_cards = r.json()['cards']
+    print(Fore.GREEN + Style.BRIGHT + 'Done...')
+
+    ###Sort user cards into a list of dictionaries with attributes
+    print(Fore.CYAN + Style.BRIGHT + 'Fetching card attributes...')
+    card_list = []
+    for card in master_cards:
+        ###Get card collection object from database
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            db_card = config.Cards.find_or_fail(card['card_id'])
+        except:
+            config.Model.set_connection_resolver(config.db_jp)
+            db_card = config.Cards.find_or_fail(card['card_id'])
+        #db_card = config.Cards.where('id','=',card['card_id']).first()
+
+        ###Get card rarity
+        if db_card.rarity == 0:
+            rarity = 'N'
+        elif db_card.rarity == 1:
+            rarity = 'R'
+        elif db_card.rarity == 2:
+            rarity = 'SR'
+        elif db_card.rarity == 3:
+            rarity ='SSR'
+        elif db_card.rarity == 4:
+            rarity = 'UR'
+        elif db_card.rarity == 5:
+            rarity = 'LR'
+        ###Get card Type
+        if str(db_card.element)[-1] == '0':
+            type ='[AGL] '
+        elif str(db_card.element)[-1] == '1':
+            type ='[TEQ] '
+        elif str(db_card.element)[-1] == '2':
+            type ='[INT] '
+        elif str(db_card.element)[-1] == '3':
+            type ='[STR] '
+        elif str(db_card.element)[-1] == '4':
+            type ='[PHY] '
+        ###Get card categories list
+        categories = []
+        #Get category id's given card id
+        card_card_categories = config.CardCardCategories.where(
+                               'card_id','=',db_card.id).get()
+
+        try:
+            for category in card_card_categories:
+                try:
+                    config.Model.set_connection_resolver(config.db_glb)
+                    categories.append(config.CardCategories.find(
+                                  category.card_category_id).name)
+                except:
+                    config.Model.set_connection_resolver(config.db_jp)
+                    categories.append(config.CardCategories.find(
+                                  category.card_category_id).name)
+        except:
+            None
+        ###Get card link_skills list
+        link_skills = []
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill1_id).name)
+        except AttributeError:
             try:
-                user_input = input()
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill1_id).name)
             except:
-                sys.stdin = sys.__stdin__
-                break
-                user_input = input()  
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill2_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill2_id).name)
+            except:
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill3_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill3_id).name)
+            except:
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill4_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill4_id).name)
+            except:
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill5_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill5_id).name)
+            except:
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill6_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill6_id).name)
+            except:
+                None
+        except:
+            None
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            link_skills.append(config.LinkSkills.find(db_card.link_skill7_id).name)
+        except AttributeError:
+            try:
+                config.Model.set_connection_resolver(config.db_jp)
+                link_skills.append(config.LinkSkills.find(db_card.link_skill7_id).name)
+            except:
+                None
+        except:
+            None
+
+        dict = {
+                'ID': db_card.id,
+                'Rarity': rarity,
+                'Name': db_card.name,
+                'Type': type,
+                'Cost': db_card.cost,
+                'Hercule': db_card.is_selling_only,
+                'HP': db_card.hp_init,
+                'Categories':categories,
+                'Links':link_skills,
+                'UniqueID': card['id']
+                }
+        card_list.append(dict)
+    print(Fore.GREEN + Style.BRIGHT + "Done...")
+
+    ###Sort cards
+    print(Fore.CYAN + Style.BRIGHT + "Sorting cards...")
+    card_list = sorted(card_list, key=lambda k: k['Name'])
+    card_list = sorted(card_list, key=lambda k: k['Rarity'])
+    card_list = sorted(card_list, key=lambda k: k['Cost'])
+    print(Fore.GREEN + Style.BRIGHT + "Done...")
+    ###Define cards to display
+    cards_to_display_dicts = []
+    cards_to_display = []
+    #Take cards in card_list that aren't hercule statues or kais?
+    for char in card_list:
+        if char['Hercule'] != 1 and char['HP'] > 5:
+            cards_to_display_dicts.append(char)
+            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
+
+    ###Define links to display
+    links_master = []
+    config.Model.set_connection_resolver(config.db_jp)
+    for link in config.LinkSkills.all():
+        links_master.append(link.name)
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            links_master.append(config.LinkSkills.find_or_fail(link.id).name)
+        except:
+            config.Model.set_connection_resolver(config.db_jp)
+            links_master.append(config.LinkSkills.find_or_fail(link.id).name)
+
+    links_to_display = sorted(links_master)
+
+    ###Define categories to display
+    categories_master = []
+    config.Model.set_connection_resolver(config.db_jp)
+    for category in config.CardCategories.all():
+        try:
+            config.Model.set_connection_resolver(config.db_glb)
+            categories_master.append(config.CardCategories.find_or_fail(category.id).name)
+        except:
+            config.Model.set_connection_resolver(config.db_jp)
+            categories_master.append(config.CardCategories.find_or_fail(category.id).name)
+
+    categories_to_display = sorted(categories_master)
+
+    ###Define window layout
+
+    col1 = [[sg.Listbox(values=(cards_to_display),size = (30,20),key='CARDS')],
+            [sg.Listbox(values=([]),size = (30,6),key = 'CARDS_CHOSEN')],
+            [sg.Button(button_text = 'Set as Supporter',key='choose_card')]]
+
+    col2 = [[sg.Listbox(values=(sorted(categories_to_display)),size = (25,20),key = 'CATEGORIES')],
+            [sg.Listbox(values=([]),size = (25,6),key = 'CATEGORIES_CHOSEN')],
+            [sg.Button(button_text ='Choose Categories',key='choose_categories'),
+             sg.Button(button_text ='Clear Categories',key='clear_categories')]]
+
+    col3 = [[sg.Listbox(values=(sorted(links_to_display)),size = (25,20),key='LINKS')],
+            [sg.Listbox(values=([]),size = (25,6),key = 'LINKS_CHOSEN')],
+            [sg.Button(button_text ='Choose Links',key='choose_links'),
+             sg.Button(button_text ='Clear Links',key='clear_links')]]
+
+    layout = [[sg.Column(col1),sg.Column(col2),sg.Column(col3)]]
+    window = sg.Window('Supporter Update',grab_anywhere=True,keep_on_top = True).Layout(layout)
+
+
+    ###Begin window loop
+    chosen_links = []
+    chosen_categories = []
+
+    ###
+    chosen_cards_ids = []
+    chosen_cards_unique_ids = []
+    chosen_cards_names = []
+    chosen_cards_to_display = []
+
+    while len(chosen_cards_ids) < 1:
+        event,values = window.Read()
+
+        if event == None:
+            return 0
+
+        if event == 'choose_card':
+            if len(values['CARDS']) < 1:
+                continue
+            #Get ID of chosen card to send to bandai
+            chosen_line = values['CARDS'][0]
+            char_name,char_id,char_unique_id = chosen_line.split(' | ')
+            chosen_cards_ids.append(int(char_id))
+            chosen_cards_unique_ids.append(int(char_unique_id))
+            try:
+                config.Model.set_connection_resolver(config.db_glb)
+                chosen_cards_names.append(config.Cards.find(char_id).name)
+            except:
+                config.Model.set_connection_resolver(config.db_jp)
+                chosen_cards_names.append(config.Cards.find(char_id).name)
+
+
+            #Chosen cards to display in lower box
+            chosen_cards_to_display.append(chosen_line)
+
+        if event == 'choose_categories':
+            for category in values['CATEGORIES']:
+                chosen_categories.append(category)
+                categories_to_display.remove(category)
+
+        if event == 'clear_categories':
+            categories_to_display.extend(chosen_categories)
+            chosen_categories[:] = []
+            categories_to_display = sorted(categories_to_display)
+
+
+        if event == 'choose_links':
+            for link in values['LINKS']:
+                chosen_links.append(link)
+                links_to_display.remove(link)
+
+        if event == 'clear_links':
+            links_to_display.extend(chosen_links)
+            chosen_links[:] = []
+            links_to_display = sorted(links_to_display)
+            break
+
+        ###Re-populate cards to display, checking filter criteria
+        cards_to_display[:] = []
+        for char in cards_to_display_dicts:
+            if char['Name'] in chosen_cards_names:
+                continue
+
+            if len(list(set(chosen_links) & set(char['Links']))) != len(chosen_links):
+                #print("List intersection")
+                continue
+
+            if len(list(set(chosen_categories) & set(char['Categories']))) != len(chosen_categories):
+                #print("Category intersectino")
+                continue
+
+            cards_to_display.append(char['Type'] + char['Rarity']+ ' ' +char['Name'] + ' | ' + str(char['ID']) + ' | '+ str(char['UniqueID']))
+
+
+        ###Update window elements
+        window.FindElement('CARDS').Update(values=cards_to_display)
+        window.FindElement('CARDS_CHOSEN').Update(values=chosen_cards_to_display)
+        window.FindElement('CATEGORIES').Update(values=categories_to_display)
+        window.FindElement('CATEGORIES_CHOSEN').Update(values=chosen_categories)
+        window.FindElement('LINKS').Update(values=links_to_display)
+        window.FindElement('LINKS_CHOSEN').Update(values=chosen_links)
+
+    window.Close()
+    ###Send selected supporter to bandai
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0 Firefox/41.0',
+        'Accept': '*/*',
+        'Authorization': packet.mac('PUT', '/support_leaders'),
+        'Content-type': 'application/json',
+        'X-Platform': config.platform,
+        'X-AssetVersion': '////',
+        'X-DatabaseVersion': '////',
+        'X-ClientVersion': '////',
+        }
+    if config.client == 'global':
+        url = 'https://ishin-global.aktsk.com/support_leaders'
+    else:
+        url = 'http://ishin-production.aktsk.jp/support_leaders'
+    #print(chosen_cards_unique_ids)
+    data = {'support_leader_ids':chosen_cards_unique_ids}
+    #print(data)
+    r = requests.put(url, data = json.dumps(data),headers = headers)
+    if 'error' in r.json():
+        print(Fore.RED + Style.BRIGHT+str(r.json()))
+    else:
+        #print(r.json())
+        print(chosen_cards_names)
+        print(Fore.GREEN + Style.BRIGHT+"Supporter updated!")
+
+
+def lr_farm():
+
+ print('------------------------------------')
+ while True:
+     print(Fore.CYAN + Style.BRIGHT + 'Farm Lr,Tur,Ur Awakening Medals ')
+     print('---------------------------------')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ Super Saiyan God SS Vegito :' + Fore.YELLOW + Style.BRIGHT + ' 0')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Majin Vegeta :' + Fore.YELLOW + Style.BRIGHT + ' 1')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Super Saiyan Goku & Super Saiyan Vegeta :' + Fore.YELLOW + Style.BRIGHT + ' 2')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Full Power Boujack (Galactic Warrior) :' + Fore.YELLOW + Style.BRIGHT + ' 3')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Cell (Perfect Form) & Cell Jr :' + Fore.YELLOW + Style.BRIGHT + ' 4')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Trunks (Teen) (Future) & Mai (Future) :' + Fore.YELLOW + Style.BRIGHT + ' 5')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Beerus & Whis :' + Fore.YELLOW + Style.BRIGHT + ' 6')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Super Saiyan Gohan (Teen) & Super Saiyan Goten (Kid) :' + Fore.YELLOW + Style.BRIGHT + ' 7')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Super Saiyan Goku (Angel) & Super Saiyan Vegeta (Angel) :' + Fore.YELLOW + Style.BRIGHT + ' 8')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Trunks (Kid) & Goten (Kid) :' + Fore.YELLOW + Style.BRIGHT + ' 9')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Super Saiyan 2 Gohan :' + Fore.YELLOW + Style.BRIGHT + ' 10')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Super Saiyan 3 Goku :' + Fore.YELLOW + Style.BRIGHT + ' 11')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Bardock :' + Fore.YELLOW + Style.BRIGHT + ' 12')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Goku Black (Super Saiyan Rosé) & Zamasu :' + Fore.YELLOW + Style.BRIGHT + ' 13')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Goku & Frieza (Final Form) (Angel):' + Fore.YELLOW + Style.BRIGHT + ' 14')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Lr Legendary Super Saiyan Broly :' + Fore.YELLOW + Style.BRIGHT + ' 15')
+     print('---------------------------------')
+
+     command = input('Enter your choice: ')
+     if command == '0':
+         print(' ')
+         aa.ss()
+         break
+     elif command == '1':
+         print(' ')
+         Lrfarm.mv()
+         break
+     elif command == '2':
+         print(' ')
+         Lrfarm.gv()
+         break
+     elif command == '3':
+         print(' ')
+         Lrfarm.b()
+         break
+     elif command == '4':
+         print(' ')
+         Lrfarm.c()
+         break
+     elif command == '5':
+         print(' ')
+         Lrfarm.tm()
+         break
+     elif command == '6':
+         print(' ')
+         Lrfarm.bw()
+         break
+     elif command == '7':
+         print(' ')
+         Lrfarm.gg()
+         break
+     elif command == '8':
+         print(' ')
+         Lrfarm.vg()
+         break
+     elif command == '9':
+         print(' ')
+         Lrfarm.tg()
+         break
+     elif command == '10':
+         print(' ')
+         Lrfarm.gh()
+         break
+     elif command == '11':
+         print(' ')
+         Lrfarm.ggg()
+         break
+     elif command == '12':
+         print(' ')
+         Lrfarm.bd()
+         break
+     elif command == '13':
+         print(' ')
+         Lrfarm.gb()
+         break
+     elif command == '14':
+         print(' ')
+         Lrfarm.gf()
+         break
+     elif command == '15':
+         print(' ')
+         Lrfarm.by()
+
+
+def ur_farm():
+
+ print('------------------------------------')
+ while True:
+     print(Fore.CYAN + Style.BRIGHT + 'Farm Tur,Ur Awakening Medals ')
+     print('---------------------------------')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ Super Saiyan God SS Vegito:' + Fore.YELLOW + Style.BRIGHT + ' 0')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY Super Saiyan Broly :' + Fore.YELLOW + Style.BRIGHT + ' 1')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR Super Gogeta :' + Fore.YELLOW + Style.BRIGHT + ' 2')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL Super Saiyan Gogeta :' + Fore.YELLOW + Style.BRIGHT + ' 3')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT SSJ3 Bardock:' + Fore.YELLOW + Style.BRIGHT + ' 4')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR SSJ4 Goku :' + Fore.YELLOW + Style.BRIGHT + ' 5')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT UI Goku :' + Fore.YELLOW + Style.BRIGHT + ' 6')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL SSJ4 Vegeta) :' + Fore.YELLOW + Style.BRIGHT + ' 7')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY FP Frieza :' + Fore.YELLOW + Style.BRIGHT + ' 8')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ Golden Frieza :' + Fore.YELLOW + Style.BRIGHT + ' 9')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL SSJ3 Goku :' + Fore.YELLOW + Style.BRIGHT + ' 10')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ SSJ4 Gogeta :' + Fore.YELLOW + Style.BRIGHT + ' 11')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT Super Gogeta :' + Fore.YELLOW + Style.BRIGHT + ' 12')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'SSJ3 Gotenks :' + Fore.YELLOW + Style.BRIGHT + ' 13')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ FP SSJ4 Goku:' + Fore.YELLOW + Style.BRIGHT + ' 14')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR Jiren :' + Fore.YELLOW + Style.BRIGHT + ' 15')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT Golden Frieza:' + Fore.YELLOW + Style.BRIGHT + ' 16')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY Android 17 :' + Fore.YELLOW + Style.BRIGHT + ' 17')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ Hit:' + Fore.YELLOW + Style.BRIGHT + ' 18')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL SSBE Vegeta :' + Fore.YELLOW + Style.BRIGHT + ' 19')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY Kid Buu:' + Fore.YELLOW + Style.BRIGHT + ' 20')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT Kid Buu:' + Fore.YELLOW + Style.BRIGHT + ' 21')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ SSJ3 Goku (Angel):' + Fore.YELLOW + Style.BRIGHT + ' 22')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY Goku Black :' + Fore.YELLOW + Style.BRIGHT + ' 23')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT Goku Black:' + Fore.YELLOW + Style.BRIGHT + ' 24')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ SSG Goku:' + Fore.YELLOW + Style.BRIGHT + ' 25')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR SSG Vegeta' + Fore.YELLOW + Style.BRIGHT + ' 26')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL SSGSS Goku :' + Fore.YELLOW + Style.BRIGHT + ' 27')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR Toppo:' + Fore.YELLOW + Style.BRIGHT + ' 28')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR Rose Goku Black' + Fore.YELLOW + Style.BRIGHT + ' 29')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY SSGSS Vegito' + Fore.YELLOW + Style.BRIGHT + ' 30')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR SSJ3 Goku :' + Fore.YELLOW + Style.BRIGHT + ' 31')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ SSJ3 Broly' + Fore.YELLOW + Style.BRIGHT + ' 32')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL Transgoku :' + Fore.YELLOW + Style.BRIGHT + ' 33')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR SSJ3 Vegeta:' + Fore.YELLOW + Style.BRIGHT + ' 34')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'PHY SSJ3 Gotenks' + Fore.YELLOW + Style.BRIGHT + ' 35')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL Turles' + Fore.YELLOW + Style.BRIGHT + ' 36')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'STR Janemba :' + Fore.YELLOW + Style.BRIGHT + ' 37')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'INT Janemba:' + Fore.YELLOW + Style.BRIGHT + ' 38')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'TEQ TransFrieza' + Fore.YELLOW + Style.BRIGHT + ' 39')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'AGL Broly' + Fore.YELLOW + Style.BRIGHT + ' 40')
+     print('---------------------------------')
+     print('---------------------------------')
+
+     command = input('Enter your choice: ')
+     if command == '0':
+         print(' ')
+         aa.ss()
+         break
+     elif command == '1':
+         print(' ')
+         aa.sss()
+         break
+     elif command == '2':
+         print(' ')
+         aa.ssss()
+         break
+     elif command == '3':
+         print(' ')
+         aa.s()
+         break
+     elif command == '4':
+         print(' ')
+         aa.a()
+         break
+     elif command == '5':
+         print(' ')
+         aa.aa()
+         break
+     elif command == '6':
+         print(' ')
+         aa.aaa()
+         break
+     elif command == '7':
+         print(' ')
+         aa.aaaa()
+         break
+     elif command == '8':
+         print(' ')
+         aa.b()
+         break
+     elif command == '9':
+         print(' ')
+         aa.bb()
+         break
+     elif command == '10':
+         print(' ')
+         aa.bbb()
+         break
+     elif command == '11':
+         print(' ')
+         aa.bbbb()
+         break
+     elif command == '12':
+         print(' ')
+         aa.c()
+         break
+     elif command == '13':
+         print(' ')
+         aa.cc()
+         break
+     elif command == '14':
+         print(' ')
+         aa.ccc()
+         break
+     elif command == '15':
+         print(' ')
+         aa.cccc()
+         break
+     elif command == '16':
+         print(' ')
+         aa.d()
+         break
+     elif command == '17':
+         print(' ')
+         aa.dd()
+         break
+     elif command == '18':
+         print(' ')
+         aa.ddd()
+         break
+     elif command == '19':
+         print(' ')
+         aa.dddd()
+         break
+     elif command == '20':
+         print(' ')
+         aa.e()
+         break
+     elif command == '21':
+         print(' ')
+         aa.ee()
+         break
+     elif command == '22':
+         print(' ')
+         aa.eee()
+         break
+     elif command == '23':
+         print(' ')
+         aa.eeee()
+         break
+     elif command == '24':
+         print(' ')
+         aa.f()
+         break
+     elif command == '25':
+         print(' ')
+         aa.ff()
+         break
+     elif command == '26':
+         print(' ')
+         aa.ffx()
+         break
+     elif command == '27':
+         print(' ')
+         aa.fff()
+         break
+     elif command == '28':
+         print(' ')
+         aa.ffff()
+         break
+     elif command == '29':
+         print(' ')
+         aa.g()
+         break
+     elif command == '30':
+         print(' ')
+         aa.gg()
+         break
+     elif command == '31':
+         print(' ')
+         aa.ggg()
+         break
+     elif command == '32':
+         print(' ')
+         aa.gggx()
+         break
+     elif command == '33':
+         print(' ')
+         aa.gggg()
+         break
+     elif command == '34':
+         print(' ')
+         aa.h()
+         break
+     elif command == '35':
+         print(' ')
+         aa.hh()
+         break
+     elif command == '36':
+         print(' ')
+         aa.hhh()
+         break
+     elif command == '37':
+         print(' ')
+         aa.hhhh()
+         break
+     elif command == '38':
+         print(' ')
+         aa.j()
+         break
+     elif command == '39':
+         print(' ')
+         aa.jj()
+         break
+     elif command == '40':
+         print(' ')
+         aa.jjj()
+         break
 
 
 
+discordurl = 'https://discord.gg/GFExDwX'
 
+def TF():
 
+ print('------------------------------------')
+ while True:
+     print(Fore.CYAN + Style.BRIGHT + 'Farm Tresures ')
+     print('---------------------------------')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Gems:' + Fore.YELLOW + Style.BRIGHT + ' 0')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Metal Fruit:' + Fore.YELLOW + Style.BRIGHT + ' 1')
+     print('---------------------------------')
+     print(Fore.CYAN + Style.BRIGHT + 'Hercule Badges:' + Fore.YELLOW + Style.BRIGHT + ' 2')
+     print('---------------------------------')
 
+     command = input('Enter your choice: ')
+     if command == '0':
+         print(' ')
+         gems()
+         break
+     if command == '1':
+     	print(' ')
+     	metal()
+     	break
+     if  command == '2':
+     	print(' ')
+     	hercule()
+     	break
+         
+def gems():
+        stage = input('What stage would you like to complete?(23007): ')
+        difficulty = input('Enter the difficulty|(3): ')
+        loop = input('Enter how many times to execute(39): ')
+        for i in range(int(loop)):
+            complete_stage(stage, difficulty)
 
+            
+def metal():
+        stage = input('What stage would you like to complete?(32207): ')
+        difficulty = input('Enter the difficulty|(2): ')
+        loop = input('Enter how many times to execute(39): ')
+        for i in range(int(loop)):
+            complete_stage(stage, difficulty)
+            
+def hercule():
+        stage = input('What stage would you like to complete?(32410): ')
+        difficulty = input('Enter the difficulty|(2): ')
+        loop = input('Enter how many times to execute(39): ')
+        for i in range(int(loop)):
+            complete_stage(stage, difficulty)
