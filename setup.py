@@ -1,22 +1,37 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Module        : setup.py
-# Author        : bssthu
-# Project       : pysqlsimplecipher
-# Creation date : 2016-06-05
-# Description   :
-#
+from distutils.core import setup
 
 
-from setuptools import setup
+def get_version(relpath):
+    """read version info from file without importing it"""
+    from os.path import dirname, join
+    for line in open(join(dirname(__file__), relpath)):
+        if '__version__' in line:
+            if '"' in line:
+                # __version__ = "0.9"
+                return line.split('"')[1]
+            elif "'" in line:
+                return line.split("'")[1]
 
+setup(
+    name='wget',
+    version=get_version('wget.py'),
+    author='anatoly techtonik <techtonik@gmail.com>',
+    url='http://bitbucket.org/techtonik/python-wget/',
 
-setup(name='pysqlsimplecipher',
-      version='0.2',
-      url='https://github.com/bssthu/pysqlsimplecipher',
-      license='GNU Lesser General Public License Version 3',
-      author='bssthu',
-      description='A tool for sqlite database encryption or decryption like sqlcipher without install sqlcipher',
-      install_requires=['pycrypto'],
-      packages=['pysqlsimplecipher']
-      )
+    description="pure python download utility",
+    license="Public Domain",
+    classifiers=[
+        'Environment :: Console',
+        'License :: Public Domain',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: System :: Networking',
+        'Topic :: Utilities',
+    ],
+
+    py_modules=['wget'],
+
+    long_description=open('README.txt').read(),
+)
