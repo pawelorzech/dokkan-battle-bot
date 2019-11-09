@@ -1,0 +1,976 @@
+ID: 999999 Name: Tuning Quest Area: 999
+ID: 946005 Name: PHY Hidden Potential Event Area: 946
+ID: 946004 Name: STR Hidden Potential Event Area: 946
+ID: 946003 Name: INT Hidden Potential Event Area: 946
+ID: 946002 Name: TEQ Hidden Potential Event Area: 946
+ID: 946001 Name: AGL Hidden Potential Event Area: 946
+ID: 944001 Name: PHY Hidden Potential Event Area: 944
+ID: 943001 Name: STR Hidden Potential Event Area: 943
+ID: 942001 Name: INT Hidden Potential Event Area: 942
+ID: 941001 Name: TEQ Hidden Potential Event Area: 941
+ID: 940001 Name: AGL Hidden Potential Event Area: 940
+ID: 711003 Name: Dragon Stone Stage Area: 711
+ID: 711002 Name: Potential Orb Stage Area: 711
+ID: 711001 Name: Zeni Stage Area: 711
+ID: 710020 Name: "Potara" Only Area: 710
+ID: 710019 Name: "Majin Buu Saga" Only Area: 710
+ID: 710018 Name: "Realm of Gods" Only Area: 710
+ID: 710017 Name: "Resurrected Warriors" Only Area: 710
+ID: 710016 Name: "Hybrid Saiyans" Only Area: 710
+ID: 710015 Name: "Peppy Gals" Only Area: 710
+ID: 710014 Name: "Shadow Dragon Saga" Only Area: 710
+ID: 710013 Name: "Fusion" Only Area: 710
+ID: 710012 Name: Extreme Class Only Area: 710
+ID: 710011 Name: Super Class Only Area: 710
+ID: 710010 Name: [VS. Super PHY] Super Battle Road Area: 710
+ID: 710009 Name: [VS. Extreme PHY] Super Battle Road Area: 710
+ID: 710008 Name: [VS. Super STR] Super Battle Road Area: 710
+ID: 710007 Name: [VS. Extreme STR] Super Battle Road Area: 710
+ID: 710006 Name: [VS. Super INT] Super Battle Road Area: 710
+ID: 710005 Name: [VS. Extreme INT] Super Battle Road Area: 710
+ID: 710004 Name: [VS. Super TEQ] Super Battle Road Area: 710
+ID: 710003 Name: [VS. Extreme TEQ] Super Battle Road Area: 710
+ID: 710002 Name: [VS. Super AGL] Super Battle Road Area: 710
+ID: 710001 Name: [VS. Extreme AGL] Super Battle Road Area: 710
+ID: 704003 Name: ?????? Area: 704
+ID: 704002 Name: ??????? Area: 704
+ID: 704001 Name: ?????? Area: 704
+ID: 703004 Name: Final Stage Area: 703
+ID: 703003 Name: Semifinal Stage Area: 703
+ID: 703002 Name: 2nd Preliminary Stage Area: 703
+ID: 703001 Name: Preliminary Stage Area: 703
+ID: 702003 Name: Final Stage Area: 702
+ID: 702002 Name: Semifinal Stage Area: 702
+ID: 702001 Name: Preliminary Stage Area: 702
+ID: 701007 Name: Dokkan Event Boss Rush 7 Area: 701
+ID: 701006 Name: Dokkan Event Boss Rush 6 Area: 701
+ID: 701005 Name: Dokkan Event Boss Rush 5 Area: 701
+ID: 701004 Name: Dokkan Event Boss Rush 4 Area: 701
+ID: 701003 Name: Dokkan Event Boss Rush 3 Area: 701
+ID: 701002 Name: Dokkan Event Boss Rush 2 Area: 701
+ID: 701001 Name: Dokkan Event Boss Rush 1 Area: 701
+ID: 604003 Name: Super Saiyan Awakens Area: 604
+ID: 604002 Name: Vegeta's Confidence Area: 604
+ID: 604001 Name: Prince's Pride Area: 604
+ID: 603003 Name: Protector of Future Peace Area: 603
+ID: 603002 Name: A Gift from Time Traveling Area: 603
+ID: 603001 Name: "Hope" Returns Area: 603
+ID: 602004 Name: [VS. Extreme AGL] Summit of the Universe Area: 602
+ID: 602003 Name: [VS. Extreme STR] Summit of the Universe Area: 602
+ID: 602002 Name: True Fear Area: 602
+ID: 602001 Name: Defying the Emperor Area: 602
+ID: 601004 Name: [VS. Super PHY] Transcended Warrior Area: 601
+ID: 601003 Name: [VS. Super TEQ] Transcended Warrior Area: 601
+ID: 601002 Name: The Real Battle Area: 601
+ID: 601001 Name: Challenging the Legend Area: 601
+ID: 552001 Name: Go! Warriors of the New Generation! Area: 552
+ID: 551001 Name: Ever-Evolving Prince Area: 551
+ID: 550001 Name: Full-Power Showdown! Area: 550
+ID: 549001 Name: The Omnipotent Saiyan Warrior Area: 549
+ID: 548001 Name: The Greatest Saiyan Adversary Area: 548
+ID: 547001 Name: The Deadliest Assassin Area: 547
+ID: 546001 Name: Infinite Mechanical Power Area: 546
+ID: 545001 Name: Ever-Evolving Evil Area: 545
+ID: 544001 Name: Ever-Evolving Power Area: 544
+ID: 543001 Name: Superb Ranger Area: 543
+ID: 542001 Name: Transcend Super Saiyan 4! Area: 542
+ID: 541001 Name: A Heart Filled With Hope Area: 541
+ID: 540002 Name: Confronting the Strongest of All Universes Area: 540
+ID: 540001 Name: Jiren the Grey Area: 540
+ID: 539001 Name: Arrival of the Universe-Crusher Area: 539
+ID: 538001 Name: Kaboom! Ultra Instinct Area: 538
+ID: 537001 Name: The Ultimate Pair of the Present World! Area: 537
+ID: 536001 Name: The Ultimate Pair of the Otherworld! Area: 536
+ID: 535002 Name: Phantom Majin Resurrected! Area: 535
+ID: 535001 Name: Mysterious Hero Area: 535
+ID: 534001 Name: The Unknown Battle Area: 534
+ID: 533002 Name: The True Golden Frieza Area: 533
+ID: 533001 Name: Evil Emperor: 24-Hour Revival Area: 533
+ID: 532001 Name: The Ultimate Super Gogeta Area: 532
+ID: 531001 Name: All-Time Nastiest Evolution Area: 531
+ID: 530001 Name: Hell's Ultimate Weapon Area: 530
+ID: 529001 Name: The Saiyan Veiled with Mysteries Area: 529
+ID: 528001 Name: Mighty Warrior: 24-Hour Revival Area: 528
+ID: 527001 Name: Battle of the Strongest Area: 527
+ID: 526002 Name: The Unrivaled Super Saiyan 4! Area: 526
+ID: 526001 Name: The Crimson Flash! Super Saiyan 4! Area: 526
+ID: 525002 Name: The Supreme Super Saiyan 4! Area: 525
+ID: 525001 Name: The Scarlet Hero! Super Saiyan 4! Area: 525
+ID: 524002 Name: Battle for Honor and Pride Area: 524
+ID: 524001 Name: The Epic Battle Begins!! Area: 524
+ID: 523002 Name: Last Judgment...Or Last Hope Area: 523
+ID: 523001 Name: The Ultimate Power of a God Area: 523
+ID: 522001 Name: A New Hope Area: 522
+ID: 521001 Name: Bespectacled Super Girl Area: 521
+ID: 520002 Name: Searing Rose-Colored Fury Area: 520
+ID: 520001 Name: Rose-Tinted Plot Area: 520
+ID: 519002 Name: Sublime Blue! Area: 519
+ID: 519001 Name: Fusion in Blue Area: 519
+ID: 518003 Name: Black Harbinger of Destruction Area: 518
+ID: 518002 Name: Dark Nightmare Area: 518
+ID: 518001 Name: A Mysterious Dark Foe Area: 518
+ID: 517003 Name: Countdown to the Crash Area: 517
+ID: 517002 Name: The Strongest Shadow Dragon Area: 517
+ID: 517001 Name: The Unprecedented Foe Area: 517
+ID: 516001 Name: Emperor's Obsession Area: 516
+ID: 515003 Name: The Strongest Majin is Born! Area: 515
+ID: 515002 Name: Horrendous Majin's Onslaught Area: 515
+ID: 515001 Name: Majin's Transformation Area: 515
+ID: 514001 Name: Ceaseless Combat Area: 514
+ID: 513003 Name: One Powerful Super Fusion! Area: 513
+ID: 513002 Name: Super Gotenks! Area: 513
+ID: 513001 Name: Fusion of Hope! Area: 513
+ID: 512003 Name: Ultimate Splendor Area: 512
+ID: 512002 Name: Meet Vegito Area: 512
+ID: 512001 Name: Miraculous Fusion Area: 512
+ID: 511002 Name: God of Destruction's Wrath Area: 511
+ID: 511001 Name: God of Destruction's Whim Area: 511
+ID: 510002 Name: The Most Powerful Blow Area: 510
+ID: 510001 Name: Saiyan's Pride Area: 510
+ID: 509002 Name: Yamcha's Premonition Area: 509
+ID: 509001 Name: Yamcha is Beaten! Area: 509
+ID: 508003 Name: The Ultimate Form Area: 508
+ID: 508002 Name: The Extreme Force Area: 508
+ID: 508001 Name: Unawakened Ability Area: 508
+ID: 507002 Name: Full-Power Final Battle Area: 507
+ID: 507001 Name: Fear Beyond Death Area: 507
+ID: 506003 Name: Overwhelming Force of Evil! Area: 506
+ID: 506002 Name: Demon of War Area: 506
+ID: 506001 Name: Innocent Monstrosity Area: 506
+ID: 505003 Name: Fusion Reborn! Area: 505
+ID: 505002 Name: Peerless Warrior's Victory Area: 505
+ID: 505001 Name: An Incredible Failure Area: 505
+ID: 504002 Name: Ultimate Finishing Move Area: 504
+ID: 504001 Name: Limit-Breaking Saiyan Area: 504
+ID: 503003 Name: Regression to Evil Area: 503
+ID: 503002 Name: Never-Ending Nightmare Area: 503
+ID: 503001 Name: Strange Battle Area: 503
+ID: 502003 Name: Waking Nightmare Area: 502
+ID: 502002 Name: The Extreme Terror Area: 502
+ID: 502001 Name: The Cell Games Area: 502
+ID: 501003 Name: The Demon Returns Area: 501
+ID: 501002 Name: Awakening Beyond Area: 501
+ID: 501001 Name: Prologue to Ruin Area: 501
+ID: 422002 Name: The Time Patrol Warrior Area: 422
+ID: 422001 Name: The Space-Time Traveler Area: 422
+ID: 421002 Name: Proof of Genius Area: 421
+ID: 421001 Name: Prodigy Prince Area: 421
+ID: 420002 Name: The Strongest Space Pirate Area: 420
+ID: 420001 Name: The Ancient Space Pirate Area: 420
+ID: 419001 Name: Guardian of the Sanctuary Area: 419
+ID: 418003 Name: Heroes Get Exhausted!? Area: 418
+ID: 418002 Name: A Pudgy Hero? Area: 418
+ID: 418001 Name: A Fusion of Super Forces!? Area: 418
+ID: 417002 Name: Proud Martial Artist Area: 417
+ID: 417001 Name: Full-Hearted Fighter Area: 417
+ID: 416002 Name: The Power of Piccolo Reborn Area: 416
+ID: 416001 Name: Divine Demonic Namekian Warrior Area: 416
+ID: 415002 Name: Earth-Shaking Power Area: 415
+ID: 415001 Name: Gentle Destroyer Area: 415
+ID: 414002 Name: Warrior of Hope Area: 414
+ID: 414001 Name: The Time-Traveling Warrior Area: 414
+ID: 413002 Name: Behind the Mask Area: 413
+ID: 413001 Name: The Masked Martial Artist Area: 413
+ID: 412002 Name: True Strength Area: 412
+ID: 412001 Name: The Best Fighter of West Quadrant Area: 412
+ID: 411002 Name: An Unexpectedly Powerful Man! Area: 411
+ID: 411001 Name: The Mysterious Mask Area: 411
+ID: 410001 Name: King Piccolo's Successor Area: 410
+ID: 409002 Name: An Invasion Bet on Primacy Area: 409
+ID: 409001 Name: Savage Sovereign Area: 409
+ID: 408002 Name: Dignity of a Clan Area: 408
+ID: 408001 Name: Cold-Blooded King Area: 408
+ID: 406003 Name: Raging Counterstrike Area: 406
+ID: 406002 Name: The Best Form of Persistence Area: 406
+ID: 406001 Name: Vicious Mechanical Monarch Area: 406
+ID: 405002 Name: The Determined Martial Artist Area: 405
+ID: 405001 Name: Master of Masters Area: 405
+ID: 404002 Name: The Assassin's Struggle Area: 404
+ID: 404001 Name: Mercenary Tao Strikes Back Area: 404
+ID: 403002 Name: Super Saiyan Goku Area: 403
+ID: 403001 Name: An Epic Showdown Area: 403
+ID: 401002 Name: The Final Showdown Area: 401
+ID: 401001 Name: Fearsome Super Elite Area: 401
+ID: 356001 Name: On the Desert Planet Area: 356
+ID: 355011 Name: Clash Between the Strongest Area: 355
+ID: 355010 Name: Nonstop Battles Area: 355
+ID: 355009 Name: Resentful Saiyan Area: 355
+ID: 355008 Name: Endless Evolution Area: 355
+ID: 355007 Name: Wrath or Battle Instinct Area: 355
+ID: 355006 Name: Low-Class Warrior and the Warrior in Exile Area: 355
+ID: 355005 Name: Super Saiyan Area: 355
+ID: 355004 Name: Broly Area: 355
+ID: 355003 Name: Paragus Area: 355
+ID: 355002 Name: Planet Vampa Area: 355
+ID: 355001 Name: Goku and Vegeta Area: 355
+ID: 354005 Name: Upa's Wish Area: 354
+ID: 354004 Name: Tien's Distress Area: 354
+ID: 354003 Name: Battle in Penguin Village! Area: 354
+ID: 354002 Name: The Mifan Empire's Plot Area: 354
+ID: 354001 Name: Reach for Victory! Martial Arts Tournament Area: 354
+ID: 353005 Name: The Terrifying Plan to Destroy the Sun Area: 353
+ID: 353004 Name: Goku Transforms?! Area: 353
+ID: 353003 Name: Sleeping Princess Area: 353
+ID: 353002 Name: Devil's Castle Area: 353
+ID: 353001 Name: Goku and Krillin Area: 353
+ID: 352006 Name: A Girl's Wish Area: 352
+ID: 352005 Name: To the Land of Gurumes! Area: 352
+ID: 352004 Name: Venerable Master Roshi Area: 352
+ID: 352003 Name: Yamcha the Hyena Area: 352
+ID: 352002 Name: In the Nighttime Forest... Area: 352
+ID: 352001 Name: Encounters and Departures Area: 352
+ID: 351003 Name: Videl Learns to Fly Area: 351
+ID: 351002 Name: Intensive Training Begins! Area: 351
+ID: 351001 Name: Hero of Hercule City Area: 351
+ID: 349005 Name: Showdown with Coora Area: 349
+ID: 349004 Name: The Nightmare Returns Area: 349
+ID: 349003 Name: Super Saiyan Tag Team! Area: 349
+ID: 349002 Name: Coora's Resurrection Area: 349
+ID: 349001 Name: New Namek's Threat Area: 349
+ID: 348004 Name: Aftermath of a Fierce Fight... Area: 348
+ID: 348003 Name: Accelerating Rampage Area: 348
+ID: 348002 Name: A Series of Tragedies Area: 348
+ID: 348001 Name: Birth of a Majin Area: 348
+ID: 347010 Name: Furious Transformation! Area: 347
+ID: 347009 Name: Dastardly Space Pirate Area: 347
+ID: 347008 Name: Mystery Planet Area: 347
+ID: 347007 Name: A Lone Warrior's Last Battle Area: 347
+ID: 347006 Name: Futile Struggle Area: 347
+ID: 347005 Name: Prelude to Doom Area: 347
+ID: 347004 Name: Frieza's Betrayal Area: 347
+ID: 347003 Name: Vegeta, Prince of the Saiyans Area: 347
+ID: 347002 Name: The Phantom Fist Area: 347
+ID: 347001 Name: Saiyans from Planet Vegeta Area: 347
+ID: 346008 Name: Body Change Area: 346
+ID: 346007 Name: The Captain Cometh! Area: 346
+ID: 346006 Name: Guru in Peril Area: 346
+ID: 346005 Name: Showdown! Jeice and Burter Area: 346
+ID: 346004 Name: Goku Finally Arrives! Area: 346
+ID: 346003 Name: Imminent Showdown Area: 346
+ID: 346002 Name: Relentless Recoome Area: 346
+ID: 346001 Name: Behold the Ginyu Force! Area: 346
+ID: 345007 Name: After the Tables Have Turned Area: 345
+ID: 345006 Name: Clash! Super Saiyan 4 vs. Super #17 Area: 345
+ID: 345005 Name: Fusion of Two Android #17s! Area: 345
+ID: 345004 Name: Formidable Foes Resurrected from Hell Area: 345
+ID: 345003 Name: Tragic Siblings Area: 345
+ID: 345002 Name: Hell Demons Cell & Frieza Area: 345
+ID: 345001 Name: Harbinger of Cataclysm Area: 345
+ID: 344009 Name: Universe Survival Showdown Area: 344
+ID: 344008 Name: Mastery of Ultra Instinct! Area: 344
+ID: 344007 Name: Proud 'Til the Very End Area: 344
+ID: 344006 Name: Toppo, God of Destruction, Cometh! Area: 344
+ID: 344005 Name: Onslaught of Fire and Fury Area: 344
+ID: 344004 Name: Bid for Supreme Dominance Area: 344
+ID: 344003 Name: Total War! Universe 3 vs. Universe 7 Area: 344
+ID: 344002 Name: Showdown! Namekians of Universe 6 Area: 344
+ID: 344001 Name: The Climactic Battle for Love Area: 344
+ID: 343006 Name: Super Namekian vs. The Power of Friendship Area: 343
+ID: 343005 Name: An Evil Namekian?! Area: 343
+ID: 343004 Name: Enter Goku! Area: 343
+ID: 343003 Name: Demons From Outer Space! Area: 343
+ID: 343002 Name: Planet in Darkness Area: 343
+ID: 343001 Name: A Shadow Looming Over Earth Area: 343
+ID: 341007 Name: Another Battle-Crazed Saiyan Clash! Area: 341
+ID: 341006 Name: Saiyan Oath Area: 341
+ID: 341005 Name: Goku vs. Jiren Area: 341
+ID: 341004 Name: Magical Girl Fighters From Universe 2 Area: 341
+ID: 341003 Name: The Warrior of Justice Draws Nigh! Area: 341
+ID: 341002 Name: The Berserker Awakens! Area: 341
+ID: 341001 Name: The Long-Awaited Tournament of Power Area: 341
+ID: 340003 Name: Paikuhan's True Power Area: 340
+ID: 340002 Name: Battle in Hell Area: 340
+ID: 340001 Name: Champions of the Otherworld Area: 340
+ID: 339008 Name: Great Conflict Ahead Area: 339
+ID: 339007 Name: Vegeta's On a Roll! Area: 339
+ID: 339006 Name: Vegeta and Zarbon Area: 339
+ID: 339005 Name: Vegeta vs. Dodoria Area: 339
+ID: 339004 Name: Assault on a Certain Village Area: 339
+ID: 339003 Name: Vegeta the Traitor Area: 339
+ID: 339002 Name: Dark Clouds Over Planet Namek Area: 339
+ID: 339001 Name: To Planet Namek! Area: 339
+ID: 338006 Name: Wrath of the Dragon! Area: 338
+ID: 338005 Name: Sorrowful Fate Area: 338
+ID: 338004 Name: Return of the Phantom Majin Area: 338
+ID: 338003 Name: Budding Bonds Area: 338
+ID: 338002 Name: Bewitching Monster Area: 338
+ID: 338001 Name: Tapion the Hero Area: 338
+ID: 337004 Name: To a New Realm Area: 337
+ID: 337003 Name: Vegeta's Rage Area: 337
+ID: 337002 Name: Birthday Party and the God of Destruction Area: 337
+ID: 337001 Name: Vegeta's Family Day Area: 337
+ID: 336004 Name: Raditz's Battle Area: 336
+ID: 336003 Name: Raditz's Pride Area: 336
+ID: 336002 Name: Father's Dream Area: 336
+ID: 336001 Name: Raditz the Weakling Area: 336
+ID: 335012 Name: Team Universe 7, Assemble! Area: 335
+ID: 335011 Name: The Tenth Warrior Area: 335
+ID: 335010 Name: The Emperor of Evil Returns Area: 335
+ID: 335009 Name: See The Wall That Must Be Passed Area: 335
+ID: 335008 Name: The Tenshin-Style Dojo's Mystery!? Area: 335
+ID: 335007 Name: Trading Blows for the First Time Area: 335
+ID: 335006 Name: High-Spirited Warriors Area: 335
+ID: 335005 Name: Goku the Recruiter Area: 335
+ID: 335004 Name: Make Way for Toppo, Warrior of Justice! Area: 335
+ID: 335003 Name: Bergamo the Crusher Vs. Goku Area: 335
+ID: 335002 Name: Awaken Your Sleeping Battle Spirit! Area: 335
+ID: 335001 Name: Losers Erased in the Tournament of Power! Area: 335
+ID: 334004 Name: Fusion Mayhem! Area: 334
+ID: 334003 Name: Enter Abo and Kado! Area: 334
+ID: 334002 Name: Vegeta's Little Brother?! Area: 334
+ID: 334001 Name: Peaceful Days Area: 334
+ID: 333005 Name: Broly, Tenacious Beast Area: 333
+ID: 333004 Name: The Tag Team Challenge Area: 333
+ID: 333003 Name: The Demon Returns! Area: 333
+ID: 333002 Name: Showdown! Bio-Warrior Area: 333
+ID: 333001 Name: Hercule's Secret?! Area: 333
+ID: 332005 Name: Proof of Courage Area: 332
+ID: 332004 Name: Lord Yao the Marauder Area: 332
+ID: 332003 Name: Monster of Mount Paozu Area: 332
+ID: 332002 Name: The Journey Begins Area: 332
+ID: 332001 Name: Great Ancestor Area: 332
+ID: 331006 Name: Stop the Reckless Majin! Area: 331
+ID: 331005 Name: Defeat the King of Demon Realm! Area: 331
+ID: 331004 Name: Young Hearts, Liberated! Area: 331
+ID: 331003 Name: Intercept the Alien Warrior! Area: 331
+ID: 331002 Name: Pure Heart, Evil Ambition Area: 331
+ID: 331001 Name: Fight On! Hero of Justice! Area: 331
+ID: 330006 Name: SS4 vs. Giant Ape Baby Area: 330
+ID: 330005 Name: The Almighty Super Saiyan 4 Area: 330
+ID: 330004 Name: Giant Ape Wreckin' Rampage Area: 330
+ID: 330003 Name: Majin Power Combined Area: 330
+ID: 330002 Name: The Trouble with Tuffles Area: 330
+ID: 330001 Name: The Board Game Domain Area: 330
+ID: 329002 Name: Boss Rabbit's Magic Touch Area: 329
+ID: 329001 Name: The Rabbit Mob Hits the Scene Area: 329
+ID: 328007 Name: Final Judgment Area: 328
+ID: 328006 Name: The Zero Mortals Plan Area: 328
+ID: 328005 Name: Rematch With Goku Black Area: 328
+ID: 328004 Name: Trunks' Determination Area: 328
+ID: 328003 Name: Universe 10 Zamasu Area: 328
+ID: 328002 Name: Message From the Future Area: 328
+ID: 328001 Name: A Dark New Enemy Appears Area: 328
+ID: 327006 Name: Arale Saves the Day! Area: 327
+ID: 327005 Name: The World's Greatest Assassin! Area: 327
+ID: 327004 Name: Showdown at Penguin Village! Area: 327
+ID: 327003 Name: An Ally of Justice Appears! Area: 327
+ID: 327002 Name: An All-Out Battle for Love?! Area: 327
+ID: 327001 Name: To Penguin Village! Area: 327
+ID: 326006 Name: Blast! Family Kamehameha! Area: 326
+ID: 326005 Name: Broly's Back! Area: 326
+ID: 326004 Name: Let's Join Forces! Area: 326
+ID: 326003 Name: Legendary Super Saiyan Area: 326
+ID: 326002 Name: Fates Intertwined Area: 326
+ID: 326001 Name: Mysterious New Planet Vegeta Area: 326
+ID: 325008 Name: The Match Concludes! Area: 325
+ID: 325007 Name: Meet the Assassin Hit! Area: 325
+ID: 325006 Name: The Saiyan of Universe 6 Area: 325
+ID: 325005 Name: Magetta vs. Vegeta Area: 325
+ID: 325004 Name: The Furious Battle! Area: 325
+ID: 325003 Name: Frost vs. Goku Area: 325
+ID: 325002 Name: The Match Begins! Area: 325
+ID: 325001 Name: Universe 6 vs. Universe 7 Area: 325
+ID: 324010 Name: The Two-Top on Earth!? Area: 324
+ID: 324009 Name: Saiyans' and Tuffles' Fate Area: 324
+ID: 324008 Name: The Revenging Attack! Area: 324
+ID: 324007 Name: Fight! Super Baby! Area: 324
+ID: 324006 Name: Nightmarish Battle Area: 324
+ID: 324005 Name: Return to Earth Area: 324
+ID: 324004 Name: Ambition Achieved!? Area: 324
+ID: 324003 Name: Baby vs. The Greatest Namekian Area: 324
+ID: 324002 Name: The Worst Brotherly Spat!? Area: 324
+ID: 324001 Name: Target the Saiyans! Area: 324
+ID: 323010 Name: The Strongest Warrior Awakens! Area: 323
+ID: 323009 Name: The Decisive Battle at Last! Area: 323
+ID: 323008 Name: The Quiet Wrath of Goku Area: 323
+ID: 323007 Name: Ferocity of the Saiyans Area: 323
+ID: 323006 Name: Attack of the Saiyans Area: 323
+ID: 323005 Name: The Fight in the Next World Area: 323
+ID: 323004 Name: Deeds Done by the Full Moon Area: 323
+ID: 323003 Name: Goodbye, Goku! Area: 323
+ID: 323002 Name: An Enemy in Common Area: 323
+ID: 323001 Name: The Mysterious Alien Warrior Area: 323
+ID: 322010 Name: Baby the Wicked Life Form Area: 322
+ID: 322009 Name: General Rilldo Area: 322
+ID: 322008 Name: Release! The All-Out Goku Area: 322
+ID: 322007 Name: Enigmatic Planet M-2 Area: 322
+ID: 322006 Name: Luud Activated!! Area: 322
+ID: 322005 Name: Planet Luud's Plot Area: 322
+ID: 322004 Name: Hot Pursuit Brothers Area: 322
+ID: 322003 Name: Planet Gelbo and Zoonama Area: 322
+ID: 322002 Name: Merchants' Planet Imecka! Area: 322
+ID: 322001 Name: The Mysterious New Dragon Balls Area: 322
+ID: 321012 Name: Gohan and Trunks Area: 321
+ID: 321011 Name: Peace for the Future Area: 321
+ID: 321010 Name: Long-Cherished Wish Fulfilled Area: 321
+ID: 321009 Name: Parental Bond Area: 321
+ID: 321008 Name: The Fruits of Training Area: 321
+ID: 321007 Name: Chance Meeting with Father Area: 321
+ID: 321006 Name: Beginning of the Journey Area: 321
+ID: 321005 Name: Last Hope Area: 321
+ID: 321004 Name: The Last Fighters Area: 321
+ID: 321003 Name: The End of Hope Area: 321
+ID: 321002 Name: The Androids' Arrival Area: 321
+ID: 321001 Name: Revenge of Frieza and King Cold Area: 321
+ID: 320024 Name: Galactic Adventurer Area: 320
+ID: 320023 Name: Explosive Parental Bond Area: 320
+ID: 320022 Name: Proud Bloodline Area: 320
+ID: 320021 Name: The Power of the Majin Area: 320
+ID: 320020 Name: In Defiance of the Heaven Area: 320
+ID: 320019 Name: God of All Saiyans Area: 320
+ID: 320018 Name: Limit-Smashing Super Saiyan Area: 320
+ID: 320017 Name: Fusion for Justice Area: 320
+ID: 320016 Name: Strength of the Sanctuary Area: 320
+ID: 320015 Name: Paragon of Justice Area: 320
+ID: 320014 Name: Strongest Under the Heavens Area: 320
+ID: 320013 Name: Devastating True Power Area: 320
+ID: 320012 Name: Unstoppable Parent and Child Area: 320
+ID: 320011 Name: One Who Wields True Power Area: 320
+ID: 320010 Name: The Boy From the Future Area: 320
+ID: 320009 Name: A Legendary Fighter Area: 320
+ID: 320008 Name: Technique Beyond Limit Area: 320
+ID: 320007 Name: Bond of Master and Disciple Area: 320
+ID: 320006 Name: Venerable Master Roshi Area: 320
+ID: 320005 Name: The Righteous Shen Style Area: 320
+ID: 320004 Name: Seasoned Martial Artist Area: 320
+ID: 320003 Name: Golden Combination Area: 320
+ID: 320002 Name: Youth With a Future Area: 320
+ID: 320001 Name: Transmogrified Monster Area: 320
+ID: 319023 Name: The Variable Majin Area: 319
+ID: 319022 Name: The Dark Prince Returns Area: 319
+ID: 319021 Name: The Android Born from Hate Area: 319
+ID: 319020 Name: Wild Hatred Area: 319
+ID: 319019 Name: Magnified Malice Area: 319
+ID: 319018 Name: Warrior of Hate Area: 319
+ID: 319017 Name: Burning for Vengeance Area: 319
+ID: 319016 Name: Depths of Despair Area: 319
+ID: 319015 Name: Metallic Demon Area: 319
+ID: 319014 Name: Wicked Bloodline Area: 319
+ID: 319013 Name: An Unusual Villain Area: 319
+ID: 319012 Name: Being of Hate and Ruin Area: 319
+ID: 319011 Name: Superior Strength Area: 319
+ID: 319010 Name: Heart Cold as Deep Space Area: 319
+ID: 319009 Name: Destroyer of the Universe Area: 319
+ID: 319008 Name: Walking Obliterator Area: 319
+ID: 319007 Name: Space Pirate Area: 319
+ID: 319006 Name: Frieza's Right Hand Area: 319
+ID: 319005 Name: Royal Might Area: 319
+ID: 319004 Name: Prince of the Saiyans Area: 319
+ID: 319003 Name: Invincible Warrior Area: 319
+ID: 319002 Name: Miniature Menace Area: 319
+ID: 319001 Name: Clayborn Warrior Area: 319
+ID: 318005 Name: Metal Coora’s Crew Area: 318
+ID: 318004 Name: The Nightmare Returns Area: 318
+ID: 318003 Name: Super Saiyan Tag Team Area: 318
+ID: 318002 Name: Coora’s Resurrection Area: 318
+ID: 318001 Name: New Namek’s Threat Area: 318
+ID: 317001 Name: Evil Charisma Area: 317
+ID: 316001 Name: Joker Area: 316
+ID: 315011 Name: Blood of the Saiyan Race Area: 315
+ID: 315010 Name: Sworn Enemy Area: 315
+ID: 315009 Name: Outclassed Area: 315
+ID: 315008 Name: Peace Restored Area: 315
+ID: 315007 Name: Spirit Bomb Miracle Area: 315
+ID: 315006 Name: Furious Goku Area: 315
+ID: 315005 Name: Ambitious Turles Area: 315
+ID: 315004 Name: Crumbling Earth Area: 315
+ID: 315003 Name: Mechanical Malice Area: 315
+ID: 315002 Name: Retaliating with Skill Area: 315
+ID: 315001 Name: Earth’s Greatest Threat Area: 315
+ID: 314012 Name: Stronger than Ever! Area: 314
+ID: 314011 Name: The Best Teacher in the Universe Area: 314
+ID: 314010 Name: Challenging the Destruction God Area: 314
+ID: 314009 Name: Battle of Gods Area: 314
+ID: 314008 Name: Super Saiyan God is Born Area: 314
+ID: 314007 Name: Vegeta's Pride Area: 314
+ID: 314006 Name: Fusion Counterattack Area: 314
+ID: 314005 Name: The Strongest Fighter: Gohan Area: 314
+ID: 314004 Name: Countdown to Destruction Area: 314
+ID: 314003 Name: Crème Caramel Fury Area: 314
+ID: 314002 Name: In Search of the Super Saiyan God Area: 314
+ID: 314001 Name: Destruction God Awakens Area: 314
+ID: 313001 Name: Stop the Reckless Majin! Area: 313
+ID: 312001 Name: Defeat the King of Demon Realm! Area: 312
+ID: 311001 Name: Young Hearts, Liberated! Area: 311
+ID: 310001 Name: Intercept the Alien Warrior! Area: 310
+ID: 309001 Name: Pure Heart, Evil Ambition Area: 309
+ID: 308001 Name: Fight On! Hero of Justice! Area: 308
+ID: 307010 Name: Strongest Clan in the Universe Area: 307
+ID: 307009 Name: History of Oppression Area: 307
+ID: 307008 Name: Like Father, Like Son Area: 307
+ID: 307007 Name: Strongest Vs. Strongest Area: 307
+ID: 307006 Name: Goku Revived! Area: 307
+ID: 307005 Name: Piccolo's Here! Area: 307
+ID: 307004 Name: Senzu Bean of Hope Area: 307
+ID: 307003 Name: To Korin's Tower Area: 307
+ID: 307002 Name: Coora's Squad Strikes! Area: 307
+ID: 307001 Name: Encroaching Evil Area: 307
+ID: 306010 Name: The Greatest Challenge Area: 306
+ID: 306009 Name: Seriously Serious Fight Area: 306
+ID: 306008 Name: Extreme Peril Area: 306
+ID: 306007 Name: Formidable Boujack! Area: 306
+ID: 306006 Name: Vicious Galactic Warrior Area: 306
+ID: 306005 Name: The Seal is Lifted Area: 306
+ID: 306004 Name: Mysterious Galactic Warrior Area: 306
+ID: 306003 Name: The Finals Commence! Area: 306
+ID: 306002 Name: The Worst Match Ever?! Area: 306
+ID: 306001 Name: World Tournament Time! Area: 306
+ID: 305013 Name: Full-Power Whis?! Area: 305
+ID: 305012 Name: The End of the Battle Beyond Gods Area: 305
+ID: 305011 Name: A Trial Beyond Divinity Area: 305
+ID: 305010 Name: Battle of Ultra Evolution Area: 305
+ID: 305009 Name: Destiny Packs a Punch Area: 305
+ID: 305008 Name: Chilling Bloodline Area: 305
+ID: 305007 Name: Beginning of Karma Area: 305
+ID: 305006 Name: 3rd Transformation Area: 305
+ID: 305005 Name: Frieza's Transformation Area: 305
+ID: 305004 Name: Frieza's Fury Area: 305
+ID: 305003 Name: Ginyu Force Rules Area: 305
+ID: 305002 Name: Namek Occupation Area: 305
+ID: 305001 Name: Foreshadowing of Despair Area: 305
+ID: 304012 Name: Battling the Unknown Area: 304
+ID: 304011 Name: Indefectible Invasion Area: 304
+ID: 304010 Name: Frieza's Army Reborn Area: 304
+ID: 304009 Name: Malevolent Resurgence Area: 304
+ID: 304008 Name: No Limits! Area: 304
+ID: 304007 Name: Gotta Get Stronger! Area: 304
+ID: 304006 Name: On the Shoulders of Gods Area: 304
+ID: 304005 Name: Top-Level Training Area: 304
+ID: 304004 Name: Pilaf's Back for More... Area: 304
+ID: 304003 Name: Problem Solved! Area: 304
+ID: 304002 Name: Fight for Peace! Area: 304
+ID: 304001 Name: Prolific Patrolmen Area: 304
+ID: 303009 Name: Furious Transformation! Area: 303
+ID: 303008 Name: Dastardly Space Pirate Area: 303
+ID: 303007 Name: Mystery Planet Area: 303
+ID: 303006 Name: Last Battle Area: 303
+ID: 303005 Name: Futile Struggle Area: 303
+ID: 303004 Name: Prelude to Doom Area: 303
+ID: 303003 Name: Frieza’s Betrayal Area: 303
+ID: 303002 Name: Planet Vegeta’s Prince Area: 303
+ID: 303001 Name: Go Team Bardock! Area: 303
+ID: 302005 Name: Red-Hot Rumble Area: 302
+ID: 302004 Name: The Prince Cometh Area: 302
+ID: 302003 Name: Goku’s Wrath Area: 302
+ID: 302002 Name: Saiyan Rampage Area: 302
+ID: 302001 Name: Here Come the Saiyans Area: 302
+ID: 301005 Name: Last Chance Area: 301
+ID: 301004 Name: Gohan Erupts! Area: 301
+ID: 301003 Name: Dire Straits Area: 301
+ID: 301002 Name: Saiyan Showdown Area: 301
+ID: 301001 Name: Raditz the Saiyan Area: 301
+ID: 179002 Name: Clash! Dokkan Butoden Part 2 Area: 179
+ID: 179001 Name: Clash! Dokkan Butoden Part 1 Area: 179
+ID: 178001 Name: Challenging the Super Champion! Area: 178
+ID: 177001 Name: Even More Secret Adventures Area: 177
+ID: 175003 Name: The Long-awaited Fight! Goku vs. Monaka Area: 175
+ID: 175002 Name: Chaotic Victory Celebration Area: 175
+ID: 175001 Name: Universe 6 vs. Universe 7 Area: 175
+ID: 173007 Name: Final Showdown with Majin Buu Area: 173
+ID: 173006 Name: The Prince of Destruction Returns Area: 173
+ID: 173005 Name: Pair Left on a Disappearing Planet Area: 173
+ID: 173004 Name: Saiyan Attack! Area: 173
+ID: 173003 Name: The Demon King of Old... Restored! Area: 173
+ID: 173002 Name: Showdown! Mercenary Tao Area: 173
+ID: 173001 Name: Reich Pilaf's World Conquest Area: 173
+ID: 171001 Name: Ghostly Prank Area: 171
+ID: 169001 Name: Go, Launch, Go! Area: 169
+ID: 168001 Name: Go, Launch, Go! Area: 168
+ID: 167001 Name: Go, Launch, Go! Area: 167
+ID: 166001 Name: Go, Launch, Go! Area: 166
+ID: 165001 Name: Go, Launch, Go! Area: 165
+ID: 164001 Name: Go, Launch, Go! Area: 164
+ID: 163001 Name: Go, Launch, Go! Area: 163
+ID: 162009 Name: Showdown with Android #21 Area: 162
+ID: 162008 Name: The Final Battle Looms Area: 162
+ID: 162007 Name: Reunion with Frieza Area: 162
+ID: 162006 Name: The Mastermind Revealed Area: 162
+ID: 162005 Name: SOS from Piccolo Area: 162
+ID: 162004 Name: Red Ribbon Army's Plot Area: 162
+ID: 162003 Name: Rescuing Krillin Area: 162
+ID: 162002 Name: Clone Warrior Area: 162
+ID: 162001 Name: A Mysterious Pulse and Earth in Peril Area: 162
+ID: 161001 Name: Little Rangers' Task Area: 161
+ID: 160004 Name: Return of the Magical Girl Fighters Area: 160
+ID: 160003 Name: Love Lasts Forever! Area: 160
+ID: 160002 Name: Believe in Love! Area: 160
+ID: 160001 Name: Let's Spread Love! Area: 160
+ID: 159001 Name: Goku Departs! Area: 159
+ID: 158005 Name: [PHY] Special Training Area: 158
+ID: 158004 Name: [STR] Special Training Area: 158
+ID: 158003 Name: [INT] Special Training Area: 158
+ID: 158002 Name: [TEQ] Special Training Area: 158
+ID: 158001 Name: [AGL] Special Training Area: 158
+ID: 157001 Name: [PHY] Special Training Area: 157
+ID: 156001 Name: [STR] Special Training Area: 156
+ID: 155001 Name: [INT] Special Training Area: 155
+ID: 154001 Name: [TEQ] Special Training Area: 154
+ID: 153001 Name: [AGL] Special Training Area: 153
+ID: 152001 Name: Majin Buu’s Candy Mischief Area: 152
+ID: 151001 Name: Forces of the Otherworld Area: 151
+ID: 150001 Name: Adventure Of Her Own Area: 150
+ID: 149005 Name: ????????? Area: 149
+ID: 149004 Name: ????????? Area: 149
+ID: 149003 Name: ????????? Area: 149
+ID: 149002 Name: ????????? Area: 149
+ID: 149001 Name: ????????? Area: 149
+ID: 147036 Name: Miracle-Makers Never Surrender Area: 147
+ID: 147035 Name: Rematch with Super Saiyan Rosé! Area: 147
+ID: 147034 Name: The Truth Will Out Area: 147
+ID: 147033 Name: A New Dark Enemy Appears! Area: 147
+ID: 147032 Name: Universe 6's Strongest Warrior Area: 147
+ID: 147031 Name: Saiyan Pride Area: 147
+ID: 147030 Name: Vegeta's All-Out Battle Area: 147
+ID: 147029 Name: The Vengeful Golden Frieza Area: 147
+ID: 147028 Name: God of Destruction vs. SS God Area: 147
+ID: 147027 Name: The Shadow Dragons' Master Area: 147
+ID: 147026 Name: Warrior of the Sun: Nuova Shenron Area: 147
+ID: 147025 Name: Baby vs. Goku Area: 147
+ID: 147024 Name: Planet M-2 Area: 147
+ID: 147023 Name: Finding a Strong Guy! Area: 147
+ID: 147022 Name: The Journey Unfolds Area: 147
+ID: 147021 Name: Stronger Than Ever! Area: 147
+ID: 147020 Name: Battle for the Universe Area: 147
+ID: 147019 Name: Meet Vegito Area: 147
+ID: 147018 Name: Warrior's Resolve Area: 147
+ID: 147017 Name: The Fated Battle! Area: 147
+ID: 147016 Name: Best of the Boys Area: 147
+ID: 147015 Name: I Am Saiyaman Area: 147
+ID: 147014 Name: Successor of the Strongest Area: 147
+ID: 147013 Name: The Android Cell Area: 147
+ID: 147012 Name: Awaken as a Super Saiyan Area: 147
+ID: 147011 Name: The Other Super Saiyan! Area: 147
+ID: 147010 Name: Legendary Super Saiyan Area: 147
+ID: 147009 Name: The Showdown Begins Area: 147
+ID: 147008 Name: Behold the Ginyu Force! Area: 147
+ID: 147007 Name: Goku vs. Vegeta Area: 147
+ID: 147006 Name: Ferocity of the Saiyans Area: 147
+ID: 147005 Name: The Mysterious Alien Warrior Area: 147
+ID: 147004 Name: Battle for the Future Area: 147
+ID: 147003 Name: The Demon King Piccolo! Area: 147
+ID: 147002 Name: The Notorious Mercenary Area: 147
+ID: 147001 Name: The Adventure Begins Area: 147
+ID: 146005 Name: PHY Hidden Potential Event Area: 146
+ID: 146004 Name: STR Hidden Potential Event Area: 146
+ID: 146003 Name: INT Hidden Potential Event Area: 146
+ID: 146002 Name: TEQ Hidden Potential Event Area: 146
+ID: 146001 Name: AGL Hidden Potential Event Area: 146
+ID: 144001 Name: PHY Hidden Potential Event Area: 144
+ID: 143001 Name: STR Hidden Potential Event Area: 143
+ID: 142001 Name: INT Hidden Potential Event Area: 142
+ID: 141001 Name: TEQ Hidden Potential Event Area: 141
+ID: 140001 Name: AGL Hidden Potential Event Area: 140
+ID: 139001 Name: Captain Yamcha's Grand Slam! Area: 139
+ID: 138001 Name: The Peculiar Penguin Village Area: 138
+ID: 137001 Name: In the Fused World... Area: 137
+ID: 136030 Name: ????????!! Area: 136
+ID: 136029 Name: ?6??????? Area: 136
+ID: 136028 Name: ??????? Area: 136
+ID: 136027 Name: ??????????! Area: 136
+ID: 136026 Name: ???????????? Area: 136
+ID: 136025 Name: ????????????! Area: 136
+ID: 136024 Name: ???????!! Area: 136
+ID: 136023 Name: ???M2 Area: 136
+ID: 136022 Name: ???????!! Area: 136
+ID: 136021 Name: ?????… Area: 136
+ID: 136020 Name: ?????!! Area: 136
+ID: 136019 Name: ????????? Area: 136
+ID: 136018 Name: ????? Area: 136
+ID: 136017 Name: ??????!! Area: 136
+ID: 136016 Name: ??????!! Area: 136
+ID: 136015 Name: ?????????????? Area: 136
+ID: 136014 Name: ?????? Area: 136
+ID: 136013 Name: ?????? Area: 136
+ID: 136012 Name: ??????????? Area: 136
+ID: 136011 Name: ??????????? Area: 136
+ID: 136010 Name: ???????? Area: 136
+ID: 136009 Name: ??????? Area: 136
+ID: 136008 Name: ?????????!! Area: 136
+ID: 136007 Name: ??????? Area: 136
+ID: 136006 Name: ???????! Area: 136
+ID: 136005 Name: ??????? Area: 136
+ID: 136004 Name: ??????????! Area: 136
+ID: 136003 Name: ??????????!! Area: 136
+ID: 136002 Name: ???????“???” Area: 136
+ID: 136001 Name: ??????? Area: 136
+ID: 135002 Name: Pan's Next Secret Adventure Area: 135
+ID: 135001 Name: Pan's Secret Adventure Area: 135
+ID: 134001 Name: The Genius Bulma's Battle Prep Area: 134
+ID: 133002 Name: Endless Adventure Area: 133
+ID: 133001 Name: Adventure of Gratitude Area: 133
+ID: 132001 Name: Turtle School Training! Area: 132
+ID: 131001 Name: Hercule’s World Tournament Area: 131
+ID: 130001 Name: Training in the Clouds Area: 130
+ID: 126001 Name: Snake Way Area: 126
+ID: 125001 Name: Snake Way Area: 125
+ID: 120002 Name: Even More Training Area: 120
+ID: 120001 Name: Training at Korin's Tower Area: 120
+ID: 116001 Name: Big Bucks Hercule Challenge Area: 116
+ID: 115002 Name: Champion’s Real Power! Area: 115
+ID: 115001 Name: Big Bucks Hercule Challenge Area: 115
+ID: 111005 Name: [PHY] Awakening Medal Area: 111
+ID: 111004 Name: [STR] Awakening Medal Area: 111
+ID: 111003 Name: [INT] Awakening Medal Area: 111
+ID: 111002 Name: [TEQ] Awakening Medal Area: 111
+ID: 111001 Name: [AGL] Awakening Medal Area: 111
+ID: 110001 Name: [PHY] Awakening Medal Area: 110
+ID: 109001 Name: [STR] Awakening Medal Area: 109
+ID: 108001 Name: [INT] Awakening Medal Area: 108
+ID: 107001 Name: [TEQ] Awakening Medal Area: 107
+ID: 106001 Name: [AGL] Awakening Medal Area: 106
+ID: 105001 Name: [PHY] Awakening Medal Area: 105
+ID: 104001 Name: [STR] Awakening Medal Area: 104
+ID: 103001 Name: [INT] Awakening Medal Area: 103
+ID: 102001 Name: [TEQ] Awakening Medal Area: 102
+ID: 101001 Name: [AGL] Awakening Medal Area: 101
+ID: 27003 Name: Training and Experience Area: 27
+ID: 27002 Name: Training with Piccolo Area: 27
+ID: 27001 Name: Resumption Area: 27
+ID: 26008 Name: Reclaiming Identity Area: 26
+ID: 26007 Name: An Ace in the Hole Area: 26
+ID: 26006 Name: Demonic Scientist Area: 26
+ID: 26005 Name: Dr. Gero's Smirk Area: 26
+ID: 26004 Name: A Loyal Android Area: 26
+ID: 26003 Name: Bio-Soldier Area: 26
+ID: 26002 Name: A Staff Officer's Battle Area: 26
+ID: 26001 Name: A Heart Lost Area: 26
+ID: 25008 Name: A Bizarre Reunion Area: 25
+ID: 25007 Name: A New Sworn Enemy...?! Area: 25
+ID: 25006 Name: A New Sworn Enemy Area: 25
+ID: 25005 Name: The Brother of Frieza Area: 25
+ID: 25004 Name: Fierce Battle against Abo and Kado Area: 25
+ID: 25003 Name: Abo-Kado Fusion! Area: 25
+ID: 25002 Name: Alien Warrior Encounter 7 Area: 25
+ID: 25001 Name: Alien Warrior Encounter 6 Area: 25
+ID: 24008 Name: Androids #17 and #18 Area: 24
+ID: 24007 Name: The Ultimate Android Area: 24
+ID: 24006 Name: #17 x 2 Area: 24
+ID: 24005 Name: Mysterious #17 Area: 24
+ID: 24004 Name: Tenacious Scientist Area: 24
+ID: 24003 Name: Promises Area: 24
+ID: 24002 Name: One Big Chance Area: 24
+ID: 24001 Name: A Bad Feeling About This Area: 24
+ID: 23008 Name: Fighting Runs in the Family Area: 23
+ID: 23007 Name: Cell's Predicament Area: 23
+ID: 23006 Name: Have the Tables Turned?! Area: 23
+ID: 23005 Name: Evolution Area: 23
+ID: 23004 Name: Contact Area: 23
+ID: 23003 Name: Cell and Vegeta Area: 23
+ID: 23002 Name: Decisions Area: 23
+ID: 23001 Name: A Cruel Twist of Fate Area: 23
+ID: 22008 Name: Accelerating Danger Area: 22
+ID: 22007 Name: Indomitable Human Spirit Area: 22
+ID: 22006 Name: Destroyer of the Universe - 4 Area: 22
+ID: 22005 Name: Destroyer of the Universe - 3 Area: 22
+ID: 22004 Name: Destroyer of the Universe - 2 Area: 22
+ID: 22003 Name: Destroyer of the Universe - 1 Area: 22
+ID: 22002 Name: Turles Returns! Area: 22
+ID: 22001 Name: The Nightmare Begins Area: 22
+ID: 21003 Name: Probe Area: 21
+ID: 21002 Name: A Mysterious Saiyan Area: 21
+ID: 21001 Name: After Awakening Area: 21
+ID: 20008 Name: The Angry Majin Area: 20
+ID: 20007 Name: Resurrection Area: 20
+ID: 20006 Name: Countdown Area: 20
+ID: 20005 Name: Lord of the Demon Realm Area: 20
+ID: 20004 Name: The Second Assassin Area: 20
+ID: 20003 Name: The First Assassin Area: 20
+ID: 20002 Name: Subjugated by Ambition Area: 20
+ID: 20001 Name: Nothing Ventured... Area: 20
+ID: 19008 Name: The Mysterious Duo Area: 19
+ID: 19007 Name: An Unseen Enemy Part 5 Area: 19
+ID: 19006 Name: An Unseen Enemy Part 4 Area: 19
+ID: 19005 Name: An Unseen Enemy Part 3 Area: 19
+ID: 19004 Name: An Unseen Enemy Part 2 Area: 19
+ID: 19003 Name: An Unseen Enemy Part 1 Area: 19
+ID: 19002 Name: The Recruited Warrior Area: 19
+ID: 19001 Name: The Forgotten Champion Area: 19
+ID: 18008 Name: Master of the Demon Realm, Part 3 Area: 18
+ID: 18007 Name: Master of the Demon Realm, Part 2 Area: 18
+ID: 18006 Name: Master of the Demon Realm, Part 1 Area: 18
+ID: 18005 Name: A Surprising End Area: 18
+ID: 18004 Name: Frieza's Final Transformation Area: 18
+ID: 18003 Name: Sovereign of the Warrior Race Area: 18
+ID: 18002 Name: Commander's Will Area: 18
+ID: 18001 Name: Coora's Armored Squad Area: 18
+ID: 17008 Name: Frieza's Second Transformation Area: 17
+ID: 17007 Name: Frieza's Transformation Area: 17
+ID: 17006 Name: Deepening Destiny Area: 17
+ID: 17005 Name: Imperial Power Area: 17
+ID: 17004 Name: The Elite Force's True Power Area: 17
+ID: 17003 Name: Zarbon's Transformation Area: 17
+ID: 17002 Name: Breaking the Siege Area: 17
+ID: 17001 Name: Frieza's Army Attacks! Area: 17
+ID: 16008 Name: Ending of the Body Exchange Area: 16
+ID: 16007 Name: Showdown! New Ginyu Force?! Area: 16
+ID: 16006 Name: Reunion with Goku? Area: 16
+ID: 16005 Name: Ginyu's Trespass! Area: 16
+ID: 16004 Name: Turles the New Saiyan Area: 16
+ID: 16003 Name: Saiyan Tag Team Returns! Area: 16
+ID: 16002 Name: Saiyan Trio Area: 16
+ID: 16001 Name: Reunion with Krillin Area: 16
+ID: 15003 Name: The Challengers Area: 15
+ID: 15002 Name: Lost Warrior Area: 15
+ID: 15001 Name: Extraordinary Evil Area: 15
+ID: 14008 Name: Nightmarish Android Area: 14
+ID: 14007 Name: All Guns Blazing Area: 14
+ID: 14006 Name: Aggressive Circuitry Area: 14
+ID: 14005 Name: Martial Warrior's Offense Area: 14
+ID: 14004 Name: Intense Onslaught Area: 14
+ID: 14003 Name: Ultimate Weapon Unleashed Area: 14
+ID: 14002 Name: Destiny Repeated Area: 14
+ID: 14001 Name: In Pursuit of Dr. Gero! Area: 14
+ID: 13008 Name: Missing Target Area: 13
+ID: 13007 Name: Bloodcurdling Message Area: 13
+ID: 13006 Name: Plundered Energy Area: 13
+ID: 13005 Name: Dr. Gero's Counterattack Area: 13
+ID: 13004 Name: Ginyu's Big Mistake Area: 13
+ID: 13003 Name: Unwanted Battle Area: 13
+ID: 13002 Name: Uninvited Enemies Area: 13
+ID: 13001 Name: A Peculiar Goku Area: 13
+ID: 12008 Name: Enter the Savior?! Area: 12
+ID: 12007 Name: Intellect and Speed Area: 12
+ID: 12006 Name: Explosive Power Area: 12
+ID: 12005 Name: Exquisite Team-Up Area: 12
+ID: 12004 Name: Telekinetic Rampage Area: 12
+ID: 12003 Name: Battle-Smart Brawler 5 Area: 12
+ID: 12002 Name: Battle-Smart Brawler 4 Area: 12
+ID: 12001 Name: Return of the Elites! Area: 12
+ID: 11008 Name: Best Team There Is Area: 11
+ID: 11007 Name: Battle-Smart Brawler 3 Area: 11
+ID: 11006 Name: Battle-Smart Brawler 2 Area: 11
+ID: 11005 Name: Battle-Smart Brawler 1 Area: 11
+ID: 11004 Name: The Wayward Invader Area: 11
+ID: 11003 Name: The Wayward Champion Area: 11
+ID: 11002 Name: Find Goku! Part 6 Area: 11
+ID: 11001 Name: Find Goku! Part 5 Area: 11
+ID: 10008 Name: Conflicting Motives Area: 10
+ID: 10007 Name: Unexpected Savior Area: 10
+ID: 10006 Name: Ace in the Hole Area: 10
+ID: 10005 Name: Dr. Gero's Ambition Area: 10
+ID: 10004 Name: Red Ribbon's Return 3 Area: 10
+ID: 10003 Name: Red Ribbon's Return 2 Area: 10
+ID: 10002 Name: Red Ribbon's Return 1 Area: 10
+ID: 10001 Name: To the Lab Area: 10
+ID: 9003 Name: Resolution Area: 9
+ID: 9002 Name: Super Saiyan Showdown! Area: 9
+ID: 9001 Name: Ultimate Saiyan Area: 9
+ID: 8010 Name: Galactic Overlord Frieza Area: 8
+ID: 8009 Name: Raging Battle Area: 8
+ID: 8008 Name: Captain Ginyu Arrives! Area: 8
+ID: 8007 Name: Offense and Defense Part 7 Area: 8
+ID: 8006 Name: Offense and Defense Part 6 Area: 8
+ID: 8005 Name: Offense and Defense Part 5 Area: 8
+ID: 8004 Name: Offense and Defense Part 4 Area: 8
+ID: 8003 Name: Offense and Defense Part 3 Area: 8
+ID: 8002 Name: Offense and Defense Part 2 Area: 8
+ID: 8001 Name: Offense and Defense Part 1 Area: 8
+ID: 7010 Name: Saiyan's Pride Area: 7
+ID: 7009 Name: Saiyan Tagteam Area: 7
+ID: 7008 Name: Elite Warrior Area: 7
+ID: 7007 Name: Let the Games Begin Area: 7
+ID: 7006 Name: Saiyan Attack Area: 7
+ID: 7005 Name: Enter Goku! Area: 7
+ID: 7004 Name: Find Goku! Part 4 Area: 7
+ID: 7003 Name: Find Goku! Part 3 Area: 7
+ID: 7002 Name: Find Goku! Part 2 Area: 7
+ID: 7001 Name: Find Goku! Part 1 Area: 7
+ID: 6010 Name: Cell's Ambition Area: 6
+ID: 6009 Name: Cell Approaches Area: 6
+ID: 6008 Name: Nightmare Team Assault Area: 6
+ID: 6007 Name: Unending Energy of Terror Area: 6
+ID: 6006 Name: Enter Android #17! Area: 6
+ID: 6005 Name: Android #18's Super Power Area: 6
+ID: 6004 Name: Android #18's Games Part 3 Area: 6
+ID: 6003 Name: Android #18's Games Part 2 Area: 6
+ID: 6002 Name: Android #18's Games Part 1 Area: 6
+ID: 6001 Name: Android Appearance Area: 6
+ID: 5010 Name: The Mighty Ginyu Force Area: 5
+ID: 5009 Name: Purple Comet Area: 5
+ID: 5008 Name: Red Magma Area: 5
+ID: 5007 Name: Blue Hurricane Area: 5
+ID: 5006 Name: Orange-Haired Hazard Area: 5
+ID: 5005 Name: Psychokinesis Area: 5
+ID: 5004 Name: Before the Storm Area: 5
+ID: 5003 Name: Piccolo's Terms Area: 5
+ID: 5002 Name: Intensive Training Area: 5
+ID: 5001 Name: Pint-Sized Super Warrior Area: 5
+ID: 4008 Name: Brutal Counterattack Area: 4
+ID: 4007 Name: The Beautiful Warrior Zarbon Area: 4
+ID: 4006 Name: Alien Warrior Encounter 5 Area: 4
+ID: 4005 Name: Alien Warrior Encounter 4 Area: 4
+ID: 4004 Name: Pursuer Who Summons Death Area: 4
+ID: 4003 Name: Alien Warrior Encounter 3 Area: 4
+ID: 4002 Name: Alien Warrior Encounter 2 Area: 4
+ID: 4001 Name: Alien Warrior Encounter 1 Area: 4
+ID: 3008 Name: Fierce Fight for Honor Area: 3
+ID: 3007 Name: Crane School Pride Area: 3
+ID: 3006 Name: Revenge of Crane School Area: 3
+ID: 3005 Name: Turtle School Trial Lesson Area: 3
+ID: 3004 Name: Clever Krillin Area: 3
+ID: 3003 Name: Telekinetic Threat Area: 3
+ID: 3002 Name: World's Greatest Teacher Area: 3
+ID: 3001 Name: Squad Leader Area: 3
+ID: 2005 Name: Malicious Android: Cell Area: 2
+ID: 2004 Name: New Enemy Area: 2
+ID: 2003 Name: Mysterious Ki Area: 2
+ID: 2002 Name: Ghost Town Investigation Area: 2
+ID: 2001 Name: Premonition of Doom Area: 2
+ID: 1005 Name: Invasion of the Warrior Race Area: 1
+ID: 1004 Name: Reinvestigation Area: 1
+ID: 1003 Name: Unrivaled Assassin Area: 1
+ID: 1002 Name: Pursuing Mercenary Tao Area: 1
+ID: 1001 Name: After the Tournament... Area: 1
+ID: 1 Name: To the Tournament! Area: 10001
+
+The Horrific Cell Games
+--------------------------------------------
+The Cell Games 502001 Difficulties: [0, 1, 2] AreaID: 502
+The Extreme Terror 502002 Difficulties: [2] AreaID: 502
+Waking Nightmare 502003 Difficulties: [3] AreaID: 502
+Tournament of Destiny 502004 Difficulties: [2, 4] AreaID: 502
+
+Transcendent Awakening Surpassing the Strongest
+--------------------------------------------
+Let's Go, Gohan! 555001 Difficulties: [2, 4] AreaID: 555
+
+Extreme Z-Area Androids/Cell Saga
+-------------------------------------------
+Invincible Battle Form (Goku) 714001 Difficulties [2,3] AreaID: 714
+Answers Found in Training (Vegeta) 714002 Difficulties [2,3]
+
+Infinite Dragon Ball History
+--------------------------------------
+Androids/Cell Saga (vs. Super Warriors) 713001  Difficulties: [5] AreaID: 713
+Androids/Cell Saga (vs. Androids) Difficulties 713002 [5] AreaID: 713
+
+Evolution of the Ultimate Life Form
+--------------------------------------
+The Android Cell 182001 Difficulties [1] AreaID: 182
+The First Evolution 182002 Difficulties [1] AreaID: 182
+Perfect Form Achieved 182003 Difficulties [1] AreaID: 182
+Cell's Offspring 182004 Difficulties [1] AreaID: 182
+Perfect Form at Full Power 182005 [1] AreaID: 182
+
+Warrior of Fury! Super Saiyan
+-----------------------------------
+This Is It! Super Saiyan! 553001 Difficulties [2,4] AreaID: 553
+
+Cataclysmic Clash! Final Showdown with Frieza
+-----------------------------------
+ Come Forth, Porunga! 362001 Difficulties: [0, 2] AreaID: 362
+Frieza's Fearsome Transformation! 362002  Difficulties: [0, 2] AreaID: 362
+Fearless Piccolo 362003  Difficulties: [0, 2] AreaID: 362
+Frieza's Second Transformation 362004  Difficulties: [0, 2] AreaID: 362
+Frieza or Vegeta? 362005  Difficulties: [0, 2] AreaID: 362
+The Ultimate Battle Begins! 362006  Difficulties: [0, 2] AreaID: 362
+Kaioken... Times Twenty?! 362007  Difficulties: [0, 2] AreaID: 362
+The Last Chance! Large Spirit Bomb 362008  Difficulties: [0, 2] AreaID: 362
+The Legendary Super Saiyan 362009  Difficulties: [0, 2] AreaID: 362
+Final Clash Between the Two Warriors 362010  Difficulties: [0, 2] AreaID: 362
+Quiet Yet Fierce Battle 362011  Difficulties: [0, 2] AreaID: 362
+End of Everything 362012  Difficulties: [0, 2] AreaID: 362
+
+Fighting Legend: Goku.
+-----------------------------------
+Area id : 712. Stage id : 712001 difficulty [ 5 ]

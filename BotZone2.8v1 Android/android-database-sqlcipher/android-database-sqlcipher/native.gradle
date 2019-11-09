@@ -1,0 +1,152 @@
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+
+task buildOpenSSL() {
+  onlyIf {
+    def armNativeFile = new File("${androidNativeRootDir}/armeabi/libcrypto.a")
+    if (armNativeFile.exists()) {
+      def out = services.get(StyledTextOutputFactory).create("")
+      out.style(Style.Normal).text("${androidNativeRootDir}/armeabi/libcrypto.a exists").style(Style.Info).println(' SKIPPED')
+    }
+    return !armNativeFile.exists()
+  }
+  doLast {
+    exec {
+      workingDir "${projectDir}"
+      commandLine "./build-openssl-libraries.sh",
+        "${minimumAndroidSdkVersion}",
+        "${minimumAndroid64BitSdkVersion}",
+        "${opensslVersion}"
+    }
+  }
+}
+
+task buildAmalgamation() {
+  onlyIf {
+    def amalgamation = new File("${projectDir}/src/main/external/sqlcipher/sqlite3.c")
+    return !amalgamation.exists()
+  }
+  doLast {
+    exec {
+      workingDir "${projectDir}/src/main/external/sqlcipher"
+      environment("CFLAGS", "${sqlcipherCFlags}")
+      commandLine "./configure", "--enable-tempstore=yes", "--with-crypto-lib=none"
+    }
+    exec {
+      workingDir "${projectDir}/src/main/external/sqlcipher"
+      environment("CFLAGS", "${sqlcipherCFlags}")
+      commandLine "make", "sqlite3.c"
+    }
+  }
+}
+
+task buildNative() {
+  description "Build the native SQLCipher binaries"
+  doLast {
+    executeNdkBuild(
+      "${nativeRootOutputDir}/libs32",
+      file("src/main/cpp").absolutePath,
+      file("src/main/cpp/Application32.mk").absolutePath,
+      "${sqlcipherCFlags}", "${otherSqlcipherCFlags}",
+      "${minimumAndroidSdkVersion}")
+    executeNdkBuild(
+      "${nativeRootOutputDir}/libs64",
+      file("src/main/cpp").absolutePath,
+      file("src/main/cpp/Application64.mk").absolutePath,
+      "${sqlcipherCFlags}", "${otherSqlcipherCFlags}",
+      "${minimumAndroid64BitSdkVersion}")
+    exec {
+      workingDir "${nativeRootOutputDir}"
+      commandLine "mkdir", "-p", "libs"
+    }
+    copy {
+      from fileTree("${nativeRootOutputDir}/libs32").include("*/*")
+      into "${nativeRootOutputDir}/libs"
+      from fileTree("${nativeRootOutputDir}/libs64").include("*/*")
+      into "${nativeRootOutputDir}/libs"
+    }
+  }
+}
+
+task cleanOpenSSL() {
+  description "Clean the OpenSSL source"
+  doLast {
+    logger.info "Cleaning OpenSSL source"
+    File file = new File("${opensslDir}")
+    if (file.exists()) {
+      file.deleteDir()
+    }
+  }
+}
+
+task cleanSQLCipher() {
+  description "Clean the SQLCipher source"
+  doLast {
+    logger.info "Cleaning SQLCipher source"
+    gitClean("${sqlcipherDir}")
+    File amalgamationSource = new File("${sqlcipherDir}/sqlite3.c")
+    File amalgamationHeader = new File("${sqlcipherDir}/sqlite3.h")
+    if (amalgamationSource.exists()) amalgamationSource.delete()
+    if (amalgamationHeader.exists()) amalgamationHeader.delete()
+  }
+}
+
+task cleanNative() {
+  description "Clean the native (JNI) build artifacts"
+  doLast {
+    logger.info "Cleaning native build artifacts"
+    ["libs", "libs32", "libs64", "obj"].each {
+      File file = new File("${projectDir}/src/main/${it}")
+      if (file.exists()) {
+        file.deleteDir()
+      }
+    }
+  }
+}
+
+task distclean(dependsOn: [clean, cleanSQLCipher, cleanOpenSSL]) {
+  description "Clean build, SQLCipher, and OpenSSL artifacts"
+  doLast {
+    new File("${androidNativeRootDir}/").deleteDir()
+  }
+}
+
+def gitClean(directory) {
+  logger.info "Cleaning directory:${directory}"
+  exec {
+    workingDir "${directory}"
+    commandLine "git", "checkout", "-f"
+  }
+  exec {
+    workingDir "${directory}"
+    commandLine "git", "clean", "-d", "-f"
+  }
+}
+
+def executeNdkBuild(outputDir, androidMkDirectory, applicationMkFile,
+                    cflags, otherSqlcipherCFlags, androidVersion) {
+  logger.info "Executing NDK build command"
+
+  def out = services.get(StyledTextOutputFactory).create("")
+  out.style(Style.Normal).text("SQLCIPHER_CFLAGS=").style(Style.Info).println("${cflags}")
+  out.style(Style.Normal).text("OPENSSL_DIR=").style(Style.Info).println("${opensslDir}")
+  out.style(Style.Normal).text("SQLCIPHER_DIR=").style(Style.Info).println("${sqlcipherDir}")
+  out.style(Style.Normal).text("SQLCIPHER_OTHER_CFLAGS=").style(Style.Info).println("${otherSqlcipherCFlags}")
+  out.style(Style.Normal).text("ANDROID_NATIVE_ROOT_DIR=").style(Style.Info).println("${androidNativeRootDir}")
+  out.style(Style.Normal).text("NDK_APP_PLATFORM=").style(Style.Info).println("${androidVersion}")
+
+  exec {
+    def outputDirectory = "NDK_LIBS_OUT=${outputDir}"
+    def applicationFile = "NDK_APPLICATION_MK=${applicationMkFile}"
+    def environmentVariables = ["SQLCIPHER_CFLAGS"       : "${cflags}",
+                                "OPENSSL_DIR"            : "${opensslDir}",
+                                "SQLCIPHER_DIR"          : "${sqlcipherDir}",
+                                "SQLCIPHER_OTHER_CFLAGS" : "${otherSqlcipherCFlags}",
+                                "ANDROID_NATIVE_ROOT_DIR": "${androidNativeRootDir}",
+                                "NDK_APP_PLATFORM"       : "${androidVersion}"]
+    environment(environmentVariables)
+    commandLine "ndk-build", "${ndkBuildType}",
+      "--environment-overrides", outputDirectory,
+      "-C", androidMkDirectory, applicationFile
+  }
+}
